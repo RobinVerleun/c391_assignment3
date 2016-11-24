@@ -108,28 +108,48 @@ void fr_parse_period(char *line, a3_Triple *triple) {
 	char *subj, *pred, *obj;
 
 	subj = strtok(line, "\t");
-	fr_parse_subject(subj, triple);
-	
 	line++;
 	pred = strtok(NULL, "\t");
-	fr_parse_predicate(pred, triple);
-
 	line++;
 	obj = strtok(NULL, "\n");
 	obj[strlen(obj) - 2] = '\0';
+	printf("%s\n", subj);
+
+	fr_parse_subject(subj, triple);
+	fr_parse_predicate(pred, triple);
 	fr_parse_object(obj, triple);
 }
 
 void fr_parse_subject(char *line, a3_Triple *triple) {
-	printf("FR_SUB: %s\n", line);
+	char full_URI[URL_MAX];
+	char *store;
+	int i;
+
+	if(line[0] == '<') {
+		line ++;
+		store = strtok(line, ">");
+		strcpy(full_URI, store);
+	} else {
+
+		store = strtok(line, ":");
+		for(i = 0; i < prefix_array_size; i++) {
+			if(strcmp(prefixes[i].shorthand, store) == 0) {
+				strcpy(full_URI, prefixes[i].uri);
+				break;
+			}
+		}	
+		line++;
+		strcat(full_URI, strtok(NULL, "\t"));
+	}
+	strcpy(triple->sub, full_URI);
 }
 
 void fr_parse_predicate(char *line, a3_Triple *triple) {
-	printf("FR_PRD: %s\n", line);	
+	//printf("FR_PRD: %s\n", line);	
 }
 
 void fr_parse_object(char *line, a3_Triple *triple) {
-	printf("FR_OBJ: %s\n", line);
+	//printf("FR_OBJ: %s\n", line);
 }
 
 int fr_printfile(char *filepath) {
