@@ -29,8 +29,6 @@ int fr_readfile(char *filepath) {
 		fr_parseline(buf, &triple);
 	}
 
-
-
 	/* Teardown */
 	fclose(ptr);
 	free(buf);
@@ -44,6 +42,10 @@ int fr_readfile(char *filepath) {
 // the final character for future parsing.
 ///////////////////////////////////////////////////////////////////////////////
 int fr_parseline(char *line, a3_Triple *triple) {
+
+	/* Remove leading whitespace */
+	while(line[0] == ' ' || line[0] == '\t') { line ++; }
+
 	/* Check if the line is a prefix - handles specially */ 
 	if( '@' == line[0] ) {
 		line_delimiter = line[strlen(line)-2];
@@ -53,17 +55,25 @@ int fr_parseline(char *line, a3_Triple *triple) {
 	} else {
 
 		switch(line_delimiter) {
+			
 			case '.' :
 				line_delimiter = line[strlen(line)-2];
 				fr_parse_period(line, triple);
-				//printf("%s \t %s \n", triple->sub, triple->prd);
+				//printf("%s | %s | %s\n", triple->sub, triple->prd, triple->obj);
 				break;
+
 			case ',' :
 				line_delimiter = line[strlen(line)-2];
+				fr_parse_comma(line, triple);
+				//printf("%s | %s | %s\n", triple->sub, triple->prd, triple->obj);
 				break;
+
 			case ';' :
 				line_delimiter = line[strlen(line)-2];
+				fr_parse_semicolon(line, triple);
+				//printf("%s | %s | %s\n", triple->sub, triple->prd, triple->obj);
 				break;
+
 			default :
 			 fprintf(stderr, "File is improperly formatted.");
 			 return 1;
@@ -110,6 +120,29 @@ void fr_parse_period(char *line, a3_Triple *triple) {
 	obj[strlen(obj) - 2] = '\0';
 
 	fr_parse_subject(subj, triple);
+	fr_parse_predicate(pred, triple);
+	fr_parse_object(obj, triple);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Parses the line, knowing that only the object field of the triple
+// will be changed. Only called if line_delimiter == ',' from the previous line.
+// Saves the last character before the line is altered.
+///////////////////////////////////////////////////////////////////////////////
+void fr_parse_comma(char *line, a3_Triple *triple) {
+	char *obj = strtok(line, "\n");
+	obj[strlen(obj) -2] = '\0';
+	fr_parse_object(obj, triple);
+}
+
+void fr_parse_semicolon(char *line, a3_Triple *triple) {
+	char *pred, *obj;
+
+	pred = strtok(line, "\t");
+	line++;
+	obj = strtok(NULL, "\n");
+	obj[strlen(obj) -2] = '\0';
+
 	fr_parse_predicate(pred, triple);
 	fr_parse_object(obj, triple);
 }
