@@ -1,0 +1,15 @@
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX dbo: <http://dbpedia.org/ontology/>
+PREFIX dbr: <http://dbpedia.org/resource/>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX dbc: <http://dbpedia.org/resource/Category:>
+
+SELECT DISTINCT ?teams ?WorldCupFinalMatches WHERE {
+	?matches dct:subject dbc:FIFA_World_Cup_finals .
+  	?matches dbo:team ?teams .
+  	{ SELECT ?teams (COUNT(?match) as ?WorldCupFinalMatches) WHERE {
+		?match dct:subject dbc:FIFA_World_Cup_finals .
+  		?match dbo:team ?teams .
+		}
+  } FILTER(?WorldCupFinalMatches > 2)
+} ORDER BY DESC(?WorldCupFinalMatches) 
