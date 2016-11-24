@@ -56,7 +56,7 @@ int fr_parseline(char *line, a3_Triple *triple) {
 			case '.' :
 				line_delimiter = line[strlen(line)-2];
 				fr_parse_period(line, triple);
-				printf("%s \t %s \n", triple->sub, triple->prd);
+				//printf("%s \t %s \n", triple->sub, triple->prd);
 				break;
 			case ',' :
 				line_delimiter = line[strlen(line)-2];
@@ -165,6 +165,76 @@ void fr_parse_predicate(char *line, a3_Triple *triple) {
 
 void fr_parse_object(char *line, a3_Triple *triple) {
 	//printf("FR_OBJ: %s\n", line);
+	char obj_URI[URL_MAX];
+	char curChar = line[0];
+	char *store;
+	int i;
+
+	//Search for ^^ -- dealing with prefix call
+	char *objpref;
+	objpref = strchr(line, '^');
+	//Search for @ -- dealing with a literal
+	char *langlit;
+	langlit = strchr(line, '@');
+	//Search for : -- for cases where the line doesnt start with "
+	char *objpage;
+	objpage = strchr(line, ':');
+
+	if ('<' == curChar) {  //Regular full address
+		line ++;
+		store = strtok(line, ">");
+		strcpy(obj_URI, store);
+
+	} else if ('"' == curChar) { // Deal with all three cases of obj's starting with "
+		// deals with ^^
+		if(objpref) {
+			line = strtok(line, "^^");
+			line = strtok(NULL, "");
+			line ++;
+
+			store = strtok(line, ":");
+			for(i = 0; i < prefix_array_size; i++) {
+				if(strcmp(prefixes[i].shorthand, store) == 0) {
+					strcpy(obj_URI, prefixes[i].uri);
+					break;
+				}
+			}
+
+			// Append the resource to the prefix and store it in triple
+			strcat(obj_URI, strtok(NULL, "\t"));
+		
+		// deals with @
+		} else if(langlit) {
+			store = strtok(line, "@");
+			strcpy(obj_URI, store);
+
+		// deals with string literal
+		} else {
+			store = line;
+			strcpy(obj_URI, store);
+		}
+
+	} else if (objpage) {
+		store = strtok(line, ":");
+		for(i = 0; i < prefix_array_size; i++) {
+			if(strcmp(prefixes[i].shorthand, store) == 0) {
+				strcpy(obj_URI, prefixes[i].uri);
+				break;
+			}
+		}
+		// Append the resource to the prefix and store it in triple 
+		line++;
+		strcat(obj_URI, strtok(NULL, ""));
+
+	} else { // deals with literals
+		store = line;
+		strcpy(obj_URI, store);
+	}
+
+	// Store the obj in our triple struct
+	strcpy(triple->obj, obj_URI);
+
+	//printf("Full_Uri: %s\n", obj_URI);
 }
 
 int fr_printfile(char *filepath) {
