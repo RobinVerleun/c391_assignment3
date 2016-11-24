@@ -44,9 +44,6 @@ int fr_readfile(char *filepath) {
 // the final character for future parsing.
 ///////////////////////////////////////////////////////////////////////////////
 int fr_parseline(char *line, a3_Triple *triple) {
-
-	
-	
 	/* Check if the line is a prefix - handles specially */ 
 	if( '@' == line[0] ) {
 		line_delimiter = line[strlen(line)-2];
@@ -57,16 +54,14 @@ int fr_parseline(char *line, a3_Triple *triple) {
 
 		switch(line_delimiter) {
 			case '.' :
-				//printf("Period.\n");
 				line_delimiter = line[strlen(line)-2];
 				fr_parse_period(line, triple);
+				printf("%s \t %s \n", triple->sub, triple->prd);
 				break;
 			case ',' :
-				//printf("Comma.\n");
 				line_delimiter = line[strlen(line)-2];
 				break;
 			case ';' :
-				//printf("Semicolon.\n");
 				line_delimiter = line[strlen(line)-2];
 				break;
 			default :
@@ -113,7 +108,6 @@ void fr_parse_period(char *line, a3_Triple *triple) {
 	line++;
 	obj = strtok(NULL, "\n");
 	obj[strlen(obj) - 2] = '\0';
-	printf("%s\n", subj);
 
 	fr_parse_subject(subj, triple);
 	fr_parse_predicate(pred, triple);
@@ -145,7 +139,28 @@ void fr_parse_subject(char *line, a3_Triple *triple) {
 }
 
 void fr_parse_predicate(char *line, a3_Triple *triple) {
-	//printf("FR_PRD: %s\n", line);	
+	char full_URI[URL_MAX];
+	char *store;
+	int i;
+
+	if(line[0] == '<') {
+		line ++;
+		store = strtok(line, ">");
+		strcpy(full_URI, store);
+	} else {
+
+		store = strtok(line, ":");
+		for(i = 0; i < prefix_array_size; i++) {
+			if(strcmp(prefixes[i].shorthand, store) == 0) {
+				strcpy(full_URI, prefixes[i].uri);
+				break;
+			}
+		}	
+		line++;
+		strcat(full_URI, strtok(NULL, "\t"));
+
+	}
+	strcpy(triple->prd, full_URI);
 }
 
 void fr_parse_object(char *line, a3_Triple *triple) {
