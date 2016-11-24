@@ -3,7 +3,7 @@
 a3_Prefix *prefixes;
 int current_prefix_count = 0;
 int prefix_array_size = 0;
-char line_delimiter;
+char line_delimiter = '.';
 
 ///////////////////////////////////////////////////////////////////////////////
 // Read a file line by line. Each line is passed into a parser, along with 
@@ -49,7 +49,6 @@ int fr_parseline(char *line, a3_Triple *triple) {
 	
 	/* Check if the line is a prefix - handles specially */ 
 	if( '@' == line[0] ) {
-
 		line_delimiter = line[strlen(line)-2];
 		fr_add_prefix(line, current_prefix_count + 1);
 		current_prefix_count++;
@@ -59,13 +58,16 @@ int fr_parseline(char *line, a3_Triple *triple) {
 		switch(line_delimiter) {
 			case '.' :
 				//printf("Period.\n");
+				line_delimiter = line[strlen(line)-2];
 				fr_parse_period(line, triple);
 				break;
 			case ',' :
 				//printf("Comma.\n");
+				line_delimiter = line[strlen(line)-2];
 				break;
 			case ';' :
 				//printf("Semicolon.\n");
+				line_delimiter = line[strlen(line)-2];
 				break;
 			default :
 			 fprintf(stderr, "File is improperly formatted.");
@@ -103,73 +105,31 @@ void fr_add_prefix(char *line, int entry_num) {
 // Saves the last character before the line is altered.
 ///////////////////////////////////////////////////////////////////////////////
 void fr_parse_period(char *line, a3_Triple *triple) {
+	char *subj, *pred, *obj;
+
+	subj = strtok(line, "\t");
+	fr_parse_subject(subj, triple);
 	
-	char full_URI[URL_MAX];		/* Used for the final results */
-	char *store;			/* Used during parsing for temp storage */
-	int i;
-
-	line_delimiter = line[strlen(line)-2];
-
-	///////////////////////////////////////////////////////////////////////
-	
-	/* Get the Subject information by prefix shorthand */
-	store = NULL;
-	store = strtok(line, ":");
-	for(i = 0; i < prefix_array_size; i++) {
-		if(strcmp(prefixes[i].shorthand, store) == 0) {
-			strcpy(full_URI, prefixes[i].uri);
-			break;
-		}
-	}
-	/* Append the resource to the prefix and store it in triple */
 	line++;
-	strcat(full_URI, strtok(NULL, "\t"));
-	strcpy(triple->sub, full_URI);
+	pred = strtok(NULL, "\t");
+	fr_parse_predicate(pred, triple);
 
-	///////////////////////////////////////////////////////////////////////
-
-	/* Get the Predicate information by prefix shorthand */
-	store = NULL;
 	line++;
-	store = strtok(NULL, ":");
-	for(i = 0; i < prefix_array_size; i++) {
-		if(strcmp(prefixes[i].shorthand, store) == 0) {
-			strcpy(full_URI, prefixes[i].uri);
-			break;
-		}
-	}
-	/* Append the resource to the prefix and store it in triple */
-	line++;
-	strcat(full_URI, strtok(NULL, "\t"));
-	strcpy(triple->prd, full_URI);
+	obj = strtok(NULL, "\n");
+	obj[strlen(obj) - 2] = '\0';
+	fr_parse_object(obj, triple);
+}
 
-	///////////////////////////////////////////////////////////////////////
+void fr_parse_subject(char *line, a3_Triple *triple) {
+	printf("FR_SUB: %s\n", line);
+}
 
-	/* Get the Object information by prefix shorthand */
-	store = NULL;
-	line++;
-	store = strtok(NULL, ":");
-	
-	/* Special check for literals */
-	char check = store[strlen(store)-2];
-	if(check == '.' || check == ',' || check == ';') {
-		char lit[50];
-		strncpy(lit, store, strlen(store)-3);
-		strcpy(triple->obj, lit);
-	} else {
-		for(i = 0; i < prefix_array_size; i++) {
-			if(strcmp(prefixes[i].shorthand, store) == 0) {
-				strcpy(full_URI, prefixes[i].uri);
-				break;
-			}
-		}
-		/* Append the resource to the prefix and store it in triple */
-		line++;
-		strcat(full_URI, strtok(NULL, " "));
-		strcpy(triple->obj, full_URI);
-		
-	}
-	printf("%s \t %s \t %s\n", triple->sub, triple->prd, triple->obj);
+void fr_parse_predicate(char *line, a3_Triple *triple) {
+	printf("FR_PRD: %s\n", line);	
+}
+
+void fr_parse_object(char *line, a3_Triple *triple) {
+	printf("FR_OBJ: %s\n", line);
 }
 
 int fr_printfile(char *filepath) {
@@ -186,7 +146,7 @@ int fr_printfile(char *filepath) {
 
 	/* Main functionality */
 	while( fgets(buf, BUFFSIZE, ptr) != NULL ) {
-		printf("%s\n", buf);
+		printf("%s", buf);
 	}
 
 	/* Teardown */
@@ -201,3 +161,76 @@ void fr_print_prefixes() {
 		printf("%d) %s : %s\n", i, prefixes[i].shorthand, prefixes[i].uri);
 	}
 }
+
+
+/*
+void fr_parse_period(char *line, a3_Triple *triple) {
+	
+	char full_URI[URL_MAX];		// Used for the final results 
+	char *store;			// Used during parsing for temp storage 
+	int i;
+
+	line_delimiter = line[strlen(line)-2];
+
+	///////////////////////////////////////////////////////////////////////
+	
+	// Get the Subject information by prefix shorthand 
+	store = NULL;
+	store = strtok(line, ":");
+	for(i = 0; i < prefix_array_size; i++) {
+		if(strcmp(prefixes[i].shorthand, store) == 0) {
+			strcpy(full_URI, prefixes[i].uri);
+			break;
+		}
+	}
+	// Append the resource to the prefix and store it in triple 
+	line++;
+	strcat(full_URI, strtok(NULL, "\t"));
+	strcpy(triple->sub, full_URI);
+
+	///////////////////////////////////////////////////////////////////////
+
+	// Get the Predicate information by prefix shorthand 
+	store = NULL;
+	line++;
+	store = strtok(NULL, ":");
+	for(i = 0; i < prefix_array_size; i++) {
+		if(strcmp(prefixes[i].shorthand, store) == 0) {
+			strcpy(full_URI, prefixes[i].uri);
+			break;
+		}
+	}
+	// Append the resource to the prefix and store it in triple 
+	line++;
+	strcat(full_URI, strtok(NULL, "\t"));
+	strcpy(triple->prd, full_URI);
+
+	///////////////////////////////////////////////////////////////////////
+
+	// Get the Object information by prefix shorthand 
+	store = NULL;
+	line++;
+	store = strtok(NULL, ":");
+	
+	// Special check for literals 
+	char check = store[strlen(store)-2];
+	if(check == '.' || check == ',' || check == ';') {
+		char lit[50];
+		strncpy(lit, store, strlen(store)-3);
+		strcpy(triple->obj, lit);
+	} else {
+		for(i = 0; i < prefix_array_size; i++) {
+			if(strcmp(prefixes[i].shorthand, store) == 0) {
+				strcpy(full_URI, prefixes[i].uri);
+				break;
+			}
+		}
+		// Append the resource to the prefix and store it in triple 
+		line++;
+		strcat(full_URI, strtok(NULL, " "));
+		strcpy(triple->obj, full_URI);
+		
+	}
+	//printf("%s \t %s \t %s\n", triple->sub, triple->prd, triple->obj);
+}
+*/

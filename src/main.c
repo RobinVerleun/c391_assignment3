@@ -7,5 +7,7 @@ int main(int argc, char **argv) {
 	}
 
 	//fr_print_prefixes();
+
+	//fr_printfile(argv[1]);
 	return 0;
 }
