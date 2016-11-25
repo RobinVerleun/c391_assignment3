@@ -227,25 +227,22 @@ void fr_parse_object(char *line, a3_Triple *triple) {
 			// Save this value to append later
 			char *lineValue = line;
 
+			strcpy(obj_URI, lineValue);
+			strcat(obj_URI, "^^");
+
 			line = strtok(NULL, "");
 			line ++;
 
 			store = strtok(line, ":");
 			for(i = 0; i < prefix_array_size; i++) {
 				if(strcmp(prefixes[i].shorthand, store) == 0) {
-					strcpy(obj_URI, prefixes[i].uri);
+					strcat(obj_URI, prefixes[i].uri);
 					break;
 				}
 			}
 
 			// Append the resource to the prefix and store it in triple
 			strcat(obj_URI, strtok(NULL, "\t"));
-			strcat(obj_URI, "#");
-		
-			// Clean up our value from earlier
-			lineValue ++;
-			lineValue = strtok(lineValue, "\"");
-			strcat(obj_URI, lineValue);
 		
 		// deals with @
 		} else if(langlit) {
