@@ -197,8 +197,9 @@ void fr_parse_predicate(char *line, a3_Triple *triple) {
 }
 
 void fr_parse_object(char *line, a3_Triple *triple) {
-	//printf("FR_OBJ: %s\n", line);
+	
 	char obj_URI[URL_MAX];
+	char *pred_URI = triple->prd;
 	char curChar = line[0];
 	char *store;
 	int i;
@@ -221,7 +222,11 @@ void fr_parse_object(char *line, a3_Triple *triple) {
 	} else if ('"' == curChar) { // Deal with all three cases of obj's starting with "
 		// deals with ^^
 		if(objpref) {
+
 			line = strtok(line, "^^");
+			// Save this value to append later
+			char *lineValue = line;
+
 			line = strtok(NULL, "");
 			line ++;
 
@@ -235,6 +240,12 @@ void fr_parse_object(char *line, a3_Triple *triple) {
 
 			// Append the resource to the prefix and store it in triple
 			strcat(obj_URI, strtok(NULL, "\t"));
+			strcat(obj_URI, "#");
+		
+			// Clean up our value from earlier
+			lineValue ++;
+			lineValue = strtok(lineValue, "\"");
+			strcat(obj_URI, lineValue);
 		
 		// deals with @
 		} else if(langlit) {
@@ -243,8 +254,12 @@ void fr_parse_object(char *line, a3_Triple *triple) {
 
 		// deals with string literal
 		} else {
+			line ++;
+			line = strtok(line, "\"");
 			store = line;
-			strcpy(obj_URI, store);
+			strcpy(obj_URI, pred_URI);
+			strcat(obj_URI, "#");
+			strcat(obj_URI, store);
 		}
 
 	} else if (objpage) {
@@ -261,13 +276,14 @@ void fr_parse_object(char *line, a3_Triple *triple) {
 
 	} else { // deals with literals
 		store = line;
-		strcpy(obj_URI, store);
+		strcpy(obj_URI, pred_URI);
+		strcat(obj_URI, "#");
+		strcat(obj_URI, store);
 	}
 
 	// Store the obj in our triple struct
 	strcpy(triple->obj, obj_URI);
 
-	//printf("Full_Uri: %s\n", obj_URI);
 }
 
 int fr_printfile(char *filepath) {
