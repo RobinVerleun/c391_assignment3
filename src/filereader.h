@@ -16,6 +16,9 @@
 	void fr_parse_predicate(char *line, a3_Triple *triple);
 	void fr_parse_subject(char *line, a3_Triple *triple);
 	
+	// Globals
+	extern a3_Prefix *prefixes;
+	
 	// Testing Prototypes 
 	int fr_printfile(char *filepath);
 	void fr_print_prefixes(void);

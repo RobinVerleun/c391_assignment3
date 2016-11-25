@@ -1,0 +1,9 @@
+
+CREATE TABLE relational_rdf_data(sub varchar(200), prd varchar(200), obj varchar(200));
+
+Our attempt to create a relational database from RDF data went through a few
+iterations. In the end, we used the simplest and most exhaustive approach.
+In C, a file is read line by line, tracking prefixes and storing them. Then,
+depending on the ending delimeter of the previous line, the next line
+is handled in specific ways. Whenever a prefix is found, the URI of that
+prefix is inserted, the resource

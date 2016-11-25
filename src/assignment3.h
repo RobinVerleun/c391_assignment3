@@ -23,6 +23,7 @@
 	} a3_Prefix;
 
 	// Globals 
-	extern a3_Prefix *prefixes;
+	
+	
 
 #endif

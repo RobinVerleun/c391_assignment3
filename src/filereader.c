@@ -27,6 +27,9 @@ int fr_readfile(char *filepath) {
 	/* Main functionality */
 	while( fgets(buf, BUFFSIZE, ptr) != NULL ) {
 		fr_parseline(buf, &triple);
+		if( dbt_insert(&triple) ) {
+			return 1;
+		}
 	}
 
 	/* Teardown */
@@ -59,19 +62,19 @@ int fr_parseline(char *line, a3_Triple *triple) {
 			case '.' :
 				line_delimiter = line[strlen(line)-2];
 				fr_parse_period(line, triple);
-				printf("%s | %s | %s\n", triple->sub, triple->prd, triple->obj);
+				//printf("%s | %s | %s\n", triple->sub, triple->prd, triple->obj);
 				break;
 
 			case ',' :
 				line_delimiter = line[strlen(line)-2];
 				fr_parse_comma(line, triple);
-				printf("%s | %s | %s\n", triple->sub, triple->prd, triple->obj);
+				//printf("%s | %s | %s\n", triple->sub, triple->prd, triple->obj);
 				break;
 
 			case ';' :
 				line_delimiter = line[strlen(line)-2];
 				fr_parse_semicolon(line, triple);
-				printf("%s | %s | %s\n", triple->sub, triple->prd, triple->obj);
+				//printf("%s | %s | %s\n", triple->sub, triple->prd, triple->obj);
 				break;
 
 			default :
