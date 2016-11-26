@@ -11,9 +11,9 @@ int dbt_open() {
     if( rc ) {
 		fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
      	sqlite3_close(db);
-		return 1;
+		return FAILURE;
   	}
-  	return 0;
+  	return SUCCESS;
 }
 
 int dbt_create_table() {
@@ -26,14 +26,14 @@ int dbt_create_table() {
 	if (rc != SQLITE_OK) {
 		fprintf(stderr, "Preparation failed (dbt_create_table): %s\n", sqlite3_errmsg(db));
 		sqlite3_close(db);
-		return 1;
+		return FAILURE;
 	}
 
 	rc = sqlite3_step(stmt);
 	if (rc != SQLITE_DONE) {
 		fprintf(stderr, "Step failed (dbt_create_table): %s\n", sqlite3_errmsg(db));
 		sqlite3_close(db);
-		return 1;
+		return FAILURE;
 	}
 
 	sqlite3_reset(stmt);
@@ -48,37 +48,37 @@ int dbt_insert(a3_Triple *triple) {
 	if (rc != SQLITE_OK) {
 		fprintf(stderr, "Preparation failed (dbt_insert): %s\n", sqlite3_errmsg(db));
 		sqlite3_close(db);
-		return 1;
+		return FAILURE;
 	}
 
 	rc = sqlite3_bind_text(stmt, 1, triple->sub, -1, SQLITE_STATIC); 
 	if(rc != SQLITE_OK) {
 		fprintf(stderr, "Subject binding failed (dbt_insert): %s\n", sqlite3_errmsg(db));
-		return 1;
+		return FAILURE;
 	}
 	rc = sqlite3_bind_text(stmt, 2, triple->prd, -1, SQLITE_STATIC); 
 	if(rc != SQLITE_OK) {	
 		fprintf(stderr, "Predicate binding failed (dbt_insert): %s\n", sqlite3_errmsg(db));
-		return 1;
+		return FAILURE;
 	}
 	rc = sqlite3_bind_text(stmt, 3, triple->obj, -1, SQLITE_STATIC);
 	if(rc != SQLITE_OK) {	
 		fprintf(stderr, "Object binding failed (dbt_insert): %s\n", sqlite3_errmsg(db));
-		return 1;
+		return FAILURE;
 	}
 
 	rc = sqlite3_step(stmt);
 	if (rc != SQLITE_DONE) {
 		fprintf(stderr, "Step failed (dbt_insert): %s\n", sqlite3_errmsg(db));
 		sqlite3_close(db);
-		return 1;
+		return FAILURE;
 	}
 	
 
 	sqlite3_clear_bindings(stmt);
 	
 	sqlite3_reset(stmt);
-	return 0;
+	return SUCCESS;
 }
 
 

@@ -6,4 +6,9 @@ iterations. In the end, we used the simplest and most exhaustive approach.
 In C, a file is read line by line, tracking prefixes and storing them. Then,
 depending on the ending delimeter of the previous line, the next line
 is handled in specific ways. Whenever a prefix is found, the URI of that
-prefix is inserted, the resource
+prefix replaces the shorthand notation, and the entire string is saved into
+a triple (defined in assignment3.h). This triple is used at the end of each
+line to push the full URI's into the database, creating one table with
+all values.
+
+TODO: 15 line example of rdf format -> relational format

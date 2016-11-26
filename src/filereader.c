@@ -21,21 +21,26 @@ int fr_readfile(char *filepath) {
 	ptr = fopen(filepath, "r");
 	if( !ptr ) {
 		fprintf(stderr, "Error opening file <%s>.\n", filepath);
-		return 1;
+		return FAILURE;
 	}
 
 	/* Main functionality */
+	int rc;
 	while( fgets(buf, BUFFSIZE, ptr) != NULL ) {
-		fr_parseline(buf, &triple);
-		if( dbt_insert(&triple) ) {
-			return 1;
+		rc = fr_parseline(buf, &triple);
+		if( rc != PARSED_PREFIX ) {
+			rc = dbt_insert(&triple);
+			if( rc == FAILURE ) {
+				return FAILURE;
+			}
 		}
+		
 	}
 
 	/* Teardown */
 	fclose(ptr);
 	free(buf);
-	return 0;
+	return SUCCESS;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -54,6 +59,7 @@ int fr_parseline(char *line, a3_Triple *triple) {
 		line_delimiter = line[strlen(line)-2];
 		fr_add_prefix(line, current_prefix_count + 1);
 		current_prefix_count++;
+		return PARSED_PREFIX;
 
 	} else {
 
@@ -79,10 +85,10 @@ int fr_parseline(char *line, a3_Triple *triple) {
 
 			default :
 			 fprintf(stderr, "File is improperly formatted.");
-			 return 1;
+			 return FAILURE;
 		}
 	}
-	return 0;
+	return SUCCESS;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -306,7 +312,7 @@ int fr_printfile(char *filepath) {
 	/* Teardown */
 	fclose(ptr);
 	free(buf);
-	return 0;
+	return SUCCESS;
 }
 
 void fr_print_prefixes() {
@@ -315,76 +321,3 @@ void fr_print_prefixes() {
 		printf("%d) %s : %s\n", i, prefixes[i].shorthand, prefixes[i].uri);
 	}
 }
-
-
-/*
-void fr_parse_period(char *line, a3_Triple *triple) {
-	
-	char full_URI[URL_MAX];		// Used for the final results 
-	char *store;			// Used during parsing for temp storage 
-	int i;
-
-	line_delimiter = line[strlen(line)-2];
-
-	///////////////////////////////////////////////////////////////////////
-	
-	// Get the Subject information by prefix shorthand 
-	store = NULL;
-	store = strtok(line, ":");
-	for(i = 0; i < prefix_array_size; i++) {
-		if(strcmp(prefixes[i].shorthand, store) == 0) {
-			strcpy(full_URI, prefixes[i].uri);
-			break;
-		}
-	}
-	// Append the resource to the prefix and store it in triple 
-	line++;
-	strcat(full_URI, strtok(NULL, "\t"));
-	strcpy(triple->sub, full_URI);
-
-	///////////////////////////////////////////////////////////////////////
-
-	// Get the Predicate information by prefix shorthand 
-	store = NULL;
-	line++;
-	store = strtok(NULL, ":");
-	for(i = 0; i < prefix_array_size; i++) {
-		if(strcmp(prefixes[i].shorthand, store) == 0) {
-			strcpy(full_URI, prefixes[i].uri);
-			break;
-		}
-	}
-	// Append the resource to the prefix and store it in triple 
-	line++;
-	strcat(full_URI, strtok(NULL, "\t"));
-	strcpy(triple->prd, full_URI);
-
-	///////////////////////////////////////////////////////////////////////
-
-	// Get the Object information by prefix shorthand 
-	store = NULL;
-	line++;
-	store = strtok(NULL, ":");
-	
-	// Special check for literals 
-	char check = store[strlen(store)-2];
-	if(check == '.' || check == ',' || check == ';') {
-		char lit[50];
-		strncpy(lit, store, strlen(store)-3);
-		strcpy(triple->obj, lit);
-	} else {
-		for(i = 0; i < prefix_array_size; i++) {
-			if(strcmp(prefixes[i].shorthand, store) == 0) {
-				strcpy(full_URI, prefixes[i].uri);
-				break;
-			}
-		}
-		// Append the resource to the prefix and store it in triple 
-		line++;
-		strcat(full_URI, strtok(NULL, " "));
-		strcpy(triple->obj, full_URI);
-		
-	}
-	//printf("%s \t %s \t %s\n", triple->sub, triple->prd, triple->obj);
-}
-*/

@@ -10,6 +10,7 @@
 	int dbt_open();
 	int dbt_create_table();
 	int dbt_insert(a3_Triple *triple);
+	int dbt_close(); //TODO: Implement
 
 	// Testing
 	int dbt_simple_select();

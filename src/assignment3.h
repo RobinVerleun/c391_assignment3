@@ -9,6 +9,8 @@
 	// Constants 
 	#define BUFFSIZE 500
 	#define URL_MAX 200
+	#define SUCCESS 0
+	#define FAILURE 1
 
 	// Struct definitions 
 	typedef struct Triples {
@@ -24,6 +26,6 @@
 
 	// Globals 
 	
-	
+
 
 #endif

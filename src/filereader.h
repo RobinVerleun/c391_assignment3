@@ -4,6 +4,8 @@
 #include "assignment3.h"
 #include "databasetools.h"
 
+	// Constants
+	#define PARSED_PREFIX 2
 	// Prototyping 
 	int fr_readfile(char *filepath);		
 	int fr_parseline(char *line, a3_Triple *triple);
@@ -18,7 +20,7 @@
 	
 	// Globals
 	extern a3_Prefix *prefixes;
-	
+
 	// Testing Prototypes 
 	int fr_printfile(char *filepath);
 	void fr_print_prefixes(void);
