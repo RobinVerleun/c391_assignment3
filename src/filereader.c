@@ -51,10 +51,10 @@ int fr_readfile(char *filepath) {
 ///////////////////////////////////////////////////////////////////////////////
 int fr_parseline(char *line, a3_Triple *triple) {
 
-	/* Remove leading whitespace */
+	// Remove leading whitespace 
 	while(line[0] == ' ' || line[0] == '\t') { line ++; }
 
-	/* Check if the line is a prefix - handles specially */ 
+	// Check if the line is a prefix - handles specially  
 	if( '@' == line[0] ) {
 		line_delimiter = line[strlen(line)-2];
 		fr_add_prefix(line, current_prefix_count + 1);

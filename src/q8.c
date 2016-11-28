@@ -22,5 +22,6 @@ int main(int argc, char **argv) {
 	}
 
 	free(database_name);
+	free(prefixes);
 	return 0;
 }

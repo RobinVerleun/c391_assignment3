@@ -6,10 +6,11 @@
 
 	// Constants
 	#define PARSED_PREFIX 2
+
 	// Prototyping 
 	int fr_readfile(char *filepath);		
 	int fr_parseline(char *line, a3_Triple *triple);
-	void fr_add_prefix(char *line, int);
+	void fr_add_prefix(char *line, int index);
 	void fr_parse_period(char *line, a3_Triple *triple);
 	void fr_parse_comma(char *line, a3_Triple *triple);
 	void fr_parse_semicolon(char *line, a3_Triple *triple);

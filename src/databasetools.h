@@ -4,8 +4,6 @@
 #include "sqlite3.h"
 #include "assignment3.h"
 
-	// Constants
-	#define DATABASE "./resources/test.db"
 	// Prototyping
 	int dbt_open();
 	int dbt_create_table();
