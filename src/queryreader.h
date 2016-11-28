@@ -23,6 +23,5 @@
 
 	// Globals
 	extern a3_Prefix *prefixes;
-	extern char *var_names;
-	
+	extern char **var_names;
 #endif

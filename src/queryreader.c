@@ -1,8 +1,10 @@
 #include "queryreader.h"
 
 a3_Prefix *prefixes;
+char **var_names;
 int current_prefix_count = 0;
 int prefix_array_size = 0;
+int var_names_count = 0;
 
 /////////////////////////////////////////////////////////////////////////////////
 //
@@ -42,7 +44,7 @@ int qr_readquery(char *filepath) {
 int qr_check_empty(char *line) {
 	while(line[0] == ' ' || line[0] == '\t' || line[0] == '\n') { 
 		if ('\n' == line[0]) {
-			return SUCCESS:
+			return SUCCESS;
 		} else {
 			line ++;
 		}
@@ -113,28 +115,39 @@ void qr_add_prefix(char *line, int entry_num) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-//
+// Parses the select statement and stores the names of the return values for
+// future use. This does not ensure ALL the variables are accounted for - 
+// it just remembers the names of which to return. TODO: handle * returns
 /////////////////////////////////////////////////////////////////////////////////
 void qr_parse_select(char * line) {
 	
-	strtok(line, " ");
+	char *count_line = strdup(line);
+
+	// Count the number of variables
+	strtok(count_line, " ");
 	char *var = strtok(NULL, " ");
-	
 	while(var != NULL) {
-		if(strchr(var, '?')){
-			printf("%s\n", var);
+		if(strchr(var, '?')) {
+			var_names_count++;
 		}
 		var = strtok(NULL, " ");
-
-
-		
-
-		//TODO:This currently isolates the ? items in the if statement. Find a way
-		//to store them so they can be returned later, and matched properly
-		//to the sub-prd-obj format. There may be more in the query.
 	}
-	
+
+	var_names = malloc(var_names_count * sizeof(char *));
+	int i = 0;
+
+	// Store the names
+	strtok(line, " ");
+	var = strtok(NULL, " ");
+	while(var != NULL) {
+		if(strchr(var, '?')) {
+			var_names[i] = strdup(var);
+			i++;
+		}
+		var = strtok(NULL, " ");
+	}
 }
+	
 
 /////////////////////////////////////////////////////////////////////////////////
 //
