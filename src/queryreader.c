@@ -58,7 +58,13 @@ void qr_trim_whitespace(char *line) {
 	while (' ' == line[0] || '\t' == line[0]) {
 		line ++;
 	}
-	// Add null character after
+	// Replace newline with null character 
+	int i; 
+	for(i = 0; line[i]; i++) {
+		if (line[i] == '\n') {
+			line[i] == '\0';
+		}
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////
