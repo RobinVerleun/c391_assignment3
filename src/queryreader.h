@@ -14,6 +14,7 @@
 	int qr_parseline(char *line);
 	void qr_add_prefix(char *line, int index);
 	void qr_parse_select(char *line);
+	void testing(char *line);
 	void qr_parse_where(char *line);
 	void qr_parse_query(char *line, int num_var);
 
