@@ -119,6 +119,10 @@ void qr_parse_select(char * line) {
 			printf("%s\n", var);
 		}
 		var = strtok(NULL, " ");
+
+
+		
+
 		//TODO:This currently isolates the ? items in the if statement. Find a way
 		//to store them so they can be returned later, and matched properly
 		//to the sub-prd-obj format. There may be more in the query.
