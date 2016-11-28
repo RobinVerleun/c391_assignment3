@@ -24,7 +24,7 @@ int qr_readquery(char *filepath) {
 	// Main functionality 
 	int rc;
 	while( fgets(buf, BUFFSIZE, ptr) != NULL ) {
-		if( qr_check_empty(buf) == SUCCESS) {
+		if( qr_check_empty(buf) == FAILURE) {
 			qr_trim_whitespace(buf);
 			qr_parseline(buf);
 		}
@@ -40,8 +40,14 @@ int qr_readquery(char *filepath) {
 //
 /////////////////////////////////////////////////////////////////////////////////
 int qr_check_empty(char *line) {
-	//TODO: Actually check the line.
-	return SUCCESS;
+	while(line[0] == ' ' || line[0] == '\t' || line[0] == '\n') { 
+		if ('\n' == line[0]) {
+			return SUCCESS:
+		} else {
+			line ++;
+		}
+	}
+	return FAILURE;
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -49,6 +55,10 @@ int qr_check_empty(char *line) {
 /////////////////////////////////////////////////////////////////////////////////
 void qr_trim_whitespace(char *line) {
 	//TODO: Trim whitespace
+	while (' ' == line[0] || '\t' == line[0]) {
+		line ++;
+	}
+	// Add null character after
 }
 
 /////////////////////////////////////////////////////////////////////////////////
