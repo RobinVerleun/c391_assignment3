@@ -99,7 +99,7 @@ int qr_parseline(char *line) {
 	//Check for SUBJECT
 	else if(strstr(copy, "SELECT") || strstr(copy, "select")) {
 		qr_parse_select(copy);
-	} else if (!strstr(copy, "}")) {
+	} else if (!strstr(copy, "}")&&!strstr(copy, "WHERE")&&!strstr(copy, "where")&&!strstr(copy, "{")) {
 		qr_parse_where(copy);
 	}
 
@@ -208,12 +208,12 @@ void qr_parse_where(char * line) {
 	strcpy(queries[current_query].var_name, query_var);
 	queries[current_query].var_loc = var_loc;
 
-	/*
+	
 	printf("%d: Sub:%s\n Prd:%s\n Obj:%s\n Varloc:%d\n VarName:%s\n", 
 		current_query, queries[current_query].triple.sub, 
 		queries[current_query].triple.prd, queries[current_query].triple.obj, 
 		queries[current_query].var_loc, queries[current_query].var_name);
-	*/
+	
 	
 	current_query++;	
 }
