@@ -3,7 +3,8 @@ PREFIX schema: <http://schema.org/>
 PREFIX dbr: <http://dbpedia.org/resource/>
 PREFIX dbo: <http://dbpedia.org/ontology/>
 SELECT ?v1 ?v2 ?v3 WHERE {
-    ?city rdf:type schema:City .
+    ?city rdf:type schema:City ,
+    		schema:Province .
   	?city dbo:country dbr:Canada .
  
-} 
+}
