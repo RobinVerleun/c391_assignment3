@@ -93,11 +93,8 @@ int qr_parseline(char *line) {
 	//Check for SUBJECT
 	else if(strstr(copy, "SELECT") || strstr(copy, "select")) {
 		qr_parse_select(copy);
-	} else if (!strstr(copy, "}") || qr_check_empty(copy) == FAILURE) {
-		printf("test1\n");
+	} else if (!strstr(copy, "}")) {
 		qr_parse_where(copy);
-		printf("test2\n");
-
 	}
 
 	free(copy);
@@ -177,8 +174,9 @@ void qr_parse_select(char * line) {
 /////////////////////////////////////////////////////////////////////////////////
 void qr_parse_where(char * line) {
 
+	current_triple++;
 	// Dynamically reallocate memory for triples for every where clause line
-	qr_addmemto_triple(current_triple + 1);
+	qr_addmemto_triple(current_triple);
 
 	// Line delimiter tells us how to deal with the sub, prd, obj triples
 	switch(line_delimiter) {
@@ -203,7 +201,7 @@ void qr_parse_where(char * line) {
 	strcpy(triples[current_triple].prd, prd);
 	strcpy(triples[current_triple].obj, obj);
 
-	qr_print_triples();
+	printf("%d: Sub:%s\n Prd:%s\n Obj:%s\n", current_triple, triples[current_triple].sub, triples[current_triple].prd, triples[current_triple].obj);
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -402,22 +400,11 @@ void qr_parse_object(char *line) {
 	} else { // deals with literals
 		store = line;
 		strcpy(obj_URI, prd);
-		printf("not here\n");
 		strcat(obj_URI, store);
 	}
 
 	// Store the obj in our triple struct
 	strcpy(obj, obj_URI);
-}
-
-/////////////////////////////////////////////////////////////////////////////////
-//
-/////////////////////////////////////////////////////////////////////////////////
-void qr_print_triples() {
-	int i;
-	for(i = 0; i < current_triple; i++) {
-		printf("%d \n- > %s\n- > %s\n- > %s\n", i, triples[i].sub, triples[i].prd, triples[i].obj);
-	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////
