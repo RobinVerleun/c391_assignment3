@@ -2,9 +2,9 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX schema: <http://schema.org/>
 PREFIX dbr: <http://dbpedia.org/resource/>
 PREFIX dbo: <http://dbpedia.org/ontology/>
-SELECT ?v1 ?v2 ?v3 WHERE {
-    ?city rdf:type schema:City ,
-    		schema:Province .
+SELECT ?city WHERE {
+    ?city rdf:type schema:City .
   	?city dbo:country dbr:Canada .
+  	dbo:country rdf:type ?test .
  
 }

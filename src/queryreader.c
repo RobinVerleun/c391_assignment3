@@ -1,15 +1,21 @@
 #include "queryreader.h"
 
+ReturnVariable *var_names;
+int var_names_count = 0;
+
 a3_Prefix *prefixes;
-char **var_names;
 int current_prefix_count = 0;
 int prefix_array_size = 0;
-char line_delimiter = '.';
+
+Query *queries;
 char sub[URL_MAX], prd[URL_MAX], obj[URL_MAX];
-a3_Triple *triples;
-int triple_array_size = 0;
-int current_triple = 0;
-int var_names_count = 0;
+int var_loc = 0;
+char query_var[VARSIZE];
+
+int query_array_size = 0;
+int current_query = 0;
+
+char line_delimiter = '.';
 
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -123,16 +129,14 @@ void qr_add_prefix(char *line, int entry_num) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-// Parses the select statement and stores the names of the return values for
-// future use. This does not ensure ALL the variables are accounted for - 
-// it just remembers the names of which to return. TODO: handle * returns
+// 
 /////////////////////////////////////////////////////////////////////////////////
-void qr_addmemto_triple(int entry_num) {
+void qr_addmemto_queries(int entry_num) {
 
-	// Check the array. If triple count is larger, double size and record. 
-	if(entry_num > triple_array_size) {
-		triples = realloc(triples, 2 * entry_num * sizeof(a3_Triple));
-		triple_array_size = 2 * entry_num;
+	// Check the array. If query count is larger, double size and record. 
+	if(entry_num > query_array_size) {
+		queries = realloc(queries, 2 * entry_num * sizeof(Query));
+		query_array_size = 2 * entry_num;
 	} 	
 }
 
@@ -153,7 +157,7 @@ void qr_parse_select(char * line) {
 		var = strtok(NULL, " ");
 	}
 
-	var_names = malloc(var_names_count * sizeof(char *));
+	var_names = malloc(var_names_count * sizeof(ReturnVariable));
 	int i = 0;
 
 	// Store the names
@@ -161,7 +165,8 @@ void qr_parse_select(char * line) {
 	var = strtok(NULL, " ");
 	while(var != NULL) {
 		if(strchr(var, '?')) {
-			var_names[i] = strdup(var);
+			var_names[i].name = strdup(var);
+			var_names[i].used = 0;
 			i++;
 		}
 		var = strtok(NULL, " ");
@@ -174,9 +179,9 @@ void qr_parse_select(char * line) {
 /////////////////////////////////////////////////////////////////////////////////
 void qr_parse_where(char * line) {
 
-	current_triple++;
-	// Dynamically reallocate memory for triples for every where clause line
-	qr_addmemto_triple(current_triple);
+	
+	// Dynamically reallocate memory for queries for every where clause line
+	qr_addmemto_queries(current_query + 1);
 
 	// Line delimiter tells us how to deal with the sub, prd, obj triples
 	switch(line_delimiter) {
@@ -197,17 +202,25 @@ void qr_parse_where(char * line) {
 		 fprintf(stderr, "File is improperly formatted.");
 	}
 
-	strcpy(triples[current_triple].sub, sub);
-	strcpy(triples[current_triple].prd, prd);
-	strcpy(triples[current_triple].obj, obj);
+	strcpy(queries[current_query].triple.sub, sub);
+	strcpy(queries[current_query].triple.prd, prd);
+	strcpy(queries[current_query].triple.obj, obj);
+	strcpy(queries[current_query].var_name, query_var);
+	queries[current_query].var_loc = var_loc;
 
-	printf("%d: Sub:%s\n Prd:%s\n Obj:%s\n", current_triple, triples[current_triple].sub, triples[current_triple].prd, triples[current_triple].obj);
+	/*
+	printf("%d: Sub:%s\n Prd:%s\n Obj:%s\n Varloc:%d\n VarName:%s\n", 
+		current_query, queries[current_query].triple.sub, 
+		queries[current_query].triple.prd, queries[current_query].triple.obj, 
+		queries[current_query].var_loc, queries[current_query].var_name);
+	*/
+	
+	current_query++;	
 }
 
 /////////////////////////////////////////////////////////////////////////////////
 //
 /////////////////////////////////////////////////////////////////////////////////
-
 void qr_parse_period(char *line) {
 	char *subj, *pred, *obj;
 
@@ -226,7 +239,6 @@ void qr_parse_period(char *line) {
 /////////////////////////////////////////////////////////////////////////////////
 //
 /////////////////////////////////////////////////////////////////////////////////
-
 void qr_parse_comma(char *line) {
 	char *obj = strtok(line, "\n\0");
 	obj[strlen(obj) -2] = '\0';
@@ -237,7 +249,6 @@ void qr_parse_comma(char *line) {
 /////////////////////////////////////////////////////////////////////////////////
 //
 /////////////////////////////////////////////////////////////////////////////////
-
 void qr_parse_semicolon(char *line) {
 	char *pred, *obj;
 
@@ -252,7 +263,6 @@ void qr_parse_semicolon(char *line) {
 /////////////////////////////////////////////////////////////////////////////////
 //
 /////////////////////////////////////////////////////////////////////////////////
-
 void qr_parse_subject(char *line) {
 	char full_URI[URL_MAX];
 	char *store;
@@ -260,6 +270,8 @@ void qr_parse_subject(char *line) {
 
 	if(line[0] == '?') {
 		strcpy(full_URI, line);
+		strcpy(query_var, line);
+		var_loc = 1;
 
 	} else if(line[0] == '<') {
 		line ++;
@@ -286,7 +298,6 @@ void qr_parse_subject(char *line) {
 /////////////////////////////////////////////////////////////////////////////////
 //
 /////////////////////////////////////////////////////////////////////////////////
-
 void qr_parse_predicate(char *line) {
 	char full_URI[URL_MAX];
 	char *store;
@@ -294,6 +305,8 @@ void qr_parse_predicate(char *line) {
 
 	if(line[0] == '?') {
 		strcpy(full_URI, line);
+		strcpy(query_var, line);
+		var_loc = 2;
 
 	} else	if(line[0] == '<') {
 		line ++;
@@ -318,7 +331,6 @@ void qr_parse_predicate(char *line) {
 /////////////////////////////////////////////////////////////////////////////////
 //
 /////////////////////////////////////////////////////////////////////////////////
-
 void qr_parse_object(char *line) {
 	
 	char obj_URI[URL_MAX];
@@ -338,6 +350,8 @@ void qr_parse_object(char *line) {
 
 	if ('?' == line[0]) {
 		strcpy(obj_URI, line);
+		strcpy(query_var, line);
+		var_loc = 3;
 
 	} else if ('<' == curChar) {  //Regular full address
 		line ++;
@@ -406,6 +420,93 @@ void qr_parse_object(char *line) {
 	// Store the obj in our triple struct
 	strcpy(obj, obj_URI);
 }
+
+void qr_build_query() {
+
+	// Initialize buffers
+	char SELECT[200];
+	char FROM[200];
+	char WHERE[1000];
+	strcpy(SELECT, "SELECT ");
+	strcpy(FROM, "FROM ");
+	strcpy(WHERE, "WHERE ");
+
+	// Iterate through the parsed query statements
+	int i, j;
+	for(i = 0; i < current_query; i++) {
+
+		char buf[URL_MAX];
+		// Build the Select statement
+		// Iterate through the known return variables; if they're there, add them!
+		for(j = 0; j < var_names_count; j++) {
+			if(0 == var_names[j].used && 
+				0 == strcmp(queries[i].var_name, var_names[j].name)) {
+				
+				var_names[j].used = 1;
+
+				if(1 == queries[i].var_loc) {
+					sprintf(buf, "t%d.sub,", i);
+					strcat(SELECT, buf);
+				}
+				else if(2 == queries[i].var_loc) {
+					sprintf(buf, "t%d.prd,", i);
+					strcat(SELECT, buf);
+				}
+				else {
+					sprintf(buf, "t%d.obj,", i);
+					strcat(SELECT, buf);
+				}
+			}
+		}
+		
+		// Build the From statement
+		sprintf(buf, "relational_rdf t%d,", i);
+		strcat(FROM, buf);
+
+
+		// Build the Where statement
+		if(1 == queries[i].var_loc) {
+			sprintf(buf, "t%d.prd = \"%s\" AND t%d.obj = \"%s\" AND \n", 
+				i, queries[i].triple.prd, i, queries[i].triple.obj);
+			strcat(WHERE, buf);
+		}
+		else if(2 == queries[i].var_loc) {
+			sprintf(buf, "t%d.sub = \"%s\" AND t%d.obj = \"%s\" AND \n", 
+				i, queries[i].triple.sub, i, queries[i].triple.obj);
+			strcat(WHERE, buf);
+		}
+		else {
+			sprintf(buf, "t%d.sub = \"%s\" AND t%d.prd = \"%s\" AND \n", 
+				i, queries[i].triple.sub, i, queries[i].triple.prd);
+			strcat(WHERE, buf);
+		}
+	}
+
+	SELECT[strlen(SELECT) - 1] = ' ';
+	FROM[strlen(FROM) -1] = ' ';
+	printf("%s\n%s\n%s\n", SELECT, FROM, WHERE);
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /////////////////////////////////////////////////////////////////////////////////
 //
