@@ -3,6 +3,11 @@
 a3_Prefix *prefixes;
 int current_prefix_count = 0;
 int prefix_array_size = 0;
+char line_delimiter = '.';
+char *sub, *prd, *obj;
+a3_Triple *triples;
+int triple_array_size = 0;
+int current_triple = 0;
 
 /////////////////////////////////////////////////////////////////////////////////
 //
@@ -42,7 +47,7 @@ int qr_readquery(char *filepath) {
 int qr_check_empty(char *line) {
 	while(line[0] == ' ' || line[0] == '\t' || line[0] == '\n') { 
 		if ('\n' == line[0]) {
-			return SUCCESS:
+			return SUCCESS;
 		} else {
 			line ++;
 		}
@@ -62,7 +67,7 @@ void qr_trim_whitespace(char *line) {
 	int i; 
 	for(i = 0; line[i]; i++) {
 		if (line[i] == '\n') {
-			line[i] == '\0';
+			line[i + 1] = '\0';
 		}
 	}
 }
@@ -115,6 +120,18 @@ void qr_add_prefix(char *line, int entry_num) {
 /////////////////////////////////////////////////////////////////////////////////
 //
 /////////////////////////////////////////////////////////////////////////////////
+void qr_addmemto_triple(int entry_num) {
+
+	// Check the array. If triple count is larger, double size and record. 
+	if(entry_num > triple_array_size) {
+		triples = realloc(triples, 2 * entry_num * sizeof(a3_Triple));
+		triple_array_size = 2 * entry_num;
+	} 	
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////
 void qr_parse_select(char * line) {
 	
 	strtok(line, " ");
@@ -140,6 +157,239 @@ void qr_parse_select(char * line) {
 //
 /////////////////////////////////////////////////////////////////////////////////
 void qr_parse_where(char * line) {
+
+	// Dynamically reallocate memory for triples for every where clause line
+	qr_addmemto_triple(current_triple + 1);
+
+	// Line delimiter tells us how to deal with the sub, prd, obj triples
+	switch(line_delimiter) {
+		
+		case '.' :
+			line_delimiter = line[strlen(line)-2];
+			qr_parse_period(line);
+		case ',' :
+			line_delimiter = line[strlen(line)-2];
+			qr_parse_comma(line);
+
+		case ';' :
+			line_delimiter = line[strlen(line)-2];
+			qr_parse_semicolon(line);
+			break;
+
+		default :
+		 fprintf(stderr, "File is improperly formatted.");
+	}
+	
+	strcpy(triples[current_triple].sub, sub);
+	strcpy(triples[current_triple].prd, prd);
+	strcpy(triples[current_triple].obj, obj);
+
+	printf("%s   |   %s   |   %s\n", triples[current_triple].sub, triples[current_triple].prd, triples[current_triple].obj);
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////
+
+void qr_parse_period(char *line) {
+	char *subj, *pred, *obj;
+
+	subj = strtok(line, "\t ");
+	line++;
+	pred = strtok(NULL, "\t ");
+	line++;
+	obj = strtok(NULL, "\n");
+	obj[strlen(obj) - 2] = '\0';
+
+	qr_parse_subject(subj);
+	qr_parse_predicate(pred);
+	qr_parse_object(obj);
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////
+
+void qr_parse_comma(char *line) {
+	char *obj = strtok(line, "\n");
+	obj[strlen(obj) -2] = '\0';
+	qr_parse_object(obj);
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////
+
+void qr_parse_semicolon(char *line) {
+	char *pred, *obj;
+
+	pred = strtok(line, "\t");
+	line++;
+	obj = strtok(NULL, "\n");
+	obj[strlen(obj) -2] = '\0';
+
+	qr_parse_predicate(pred);
+	qr_parse_object(obj);
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////
+
+void qr_parse_subject(char *line) {
+	char full_URI[URL_MAX];
+	char *store;
+	int i;
+
+	if(line[0] == '?') {
+
+		printf("Found a variable!\n");
+		strcpy(full_URI, line);
+
+	} else if(line[0] == '<') {
+		line ++;
+		store = strtok(line, ">");
+		strcpy(full_URI, store);
+	} else {
+
+		store = strtok(line, ":");
+		for(i = 0; i < prefix_array_size; i++) {
+			if(strcmp(prefixes[i].shorthand, store) == 0) {
+				strcpy(full_URI, prefixes[i].uri);
+				break;
+			}
+		}	
+		line++;
+		strcat(full_URI, strtok(NULL, "\t"));
+	}
+	strcpy(sub, full_URI);
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////
+
+void qr_parse_predicate(char *line) {
+	char full_URI[URL_MAX];
+	char *store;
+	int i;
+
+	if(line[0] == '?') {
+		printf("Found a variable!\n");
+		strcpy(full_URI, line);
+
+	} else	if(line[0] == '<') {
+		line ++;
+		store = strtok(line, ">");
+		strcpy(full_URI, store);
+	} else {
+
+		store = strtok(line, ":");
+		for(i = 0; i < prefix_array_size; i++) {
+			if(strcmp(prefixes[i].shorthand, store) == 0) {
+				strcpy(full_URI, prefixes[i].uri);
+				break;
+			}
+		}	
+		line++;
+		strcat(full_URI, strtok(NULL, "\t"));
+
+	}
+	strcpy(prd, full_URI);
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////
+
+void qr_parse_object(char *line) {
+	
+	char obj_URI[URL_MAX];
+	char curChar = line[0];
+	char *store;
+	int i;
+
+	//Search for ^^ -- dealing with prefix call
+	char *objpref;
+	objpref = strchr(line, '^');
+	//Search for @ -- dealing with a literal
+	char *langlit;
+	langlit = strchr(line, '@');
+	//Search for : -- for cases where the line doesnt start with "
+	char *objpage;
+	objpage = strchr(line, ':');
+
+	if ('?' == line[0]) {
+
+		printf("Found a variable!\n");
+		strcpy(obj_URI, line);
+
+	} else if ('<' == curChar) {  //Regular full address
+		line ++;
+		store = strtok(line, ">");
+		strcpy(obj_URI, store);
+
+	} else if ('"' == curChar) { // Deal with all three cases of obj's starting with "
+		// deals with ^^
+		if(objpref) {
+
+			line = strtok(line, "^^");
+			// Save this value to append later
+			char *lineValue = line;
+
+			strcpy(obj_URI, lineValue);
+			strcat(obj_URI, "^^");
+
+			line = strtok(NULL, "");
+			line ++;
+
+			store = strtok(line, ":");
+			for(i = 0; i < prefix_array_size; i++) {
+				if(strcmp(prefixes[i].shorthand, store) == 0) {
+					strcat(obj_URI, prefixes[i].uri);
+					break;
+				}
+			}
+
+			// Append the resource to the prefix and store it in triple
+			strcat(obj_URI, strtok(NULL, "\t"));
+		
+		// deals with @
+		} else if(langlit) {
+			store = strtok(line, "@");
+			strcpy(obj_URI, store);
+
+		// deals with string literal
+		} else {
+			line ++;
+			line = strtok(line, "\"");
+			store = line;
+			strcpy(obj_URI, prd);
+			strcat(obj_URI, "#");
+			strcat(obj_URI, store);
+		}
+
+	} else if (objpage) {
+		store = strtok(line, ":");
+		for(i = 0; i < prefix_array_size; i++) {
+			if(strcmp(prefixes[i].shorthand, store) == 0) {
+				strcpy(obj_URI, prefixes[i].uri);
+				break;
+			}
+		}
+		// Append the resource to the prefix and store it in triple 
+		line++;
+		strcat(obj_URI, strtok(NULL, ""));
+
+	} else { // deals with literals
+		store = line;
+		strcpy(obj_URI, prd);
+		strcat(obj_URI, "#");
+		strcat(obj_URI, store);
+	}
+
+	// Store the obj in our triple struct
+	strcpy(obj, obj_URI);
 
 }
 
