@@ -33,5 +33,5 @@
 	extern a3_Prefix *prefixes;
 	extern char *var_names;
 	extern a3_Triple *triples;
-	
+	extern char **var_names;
 #endif

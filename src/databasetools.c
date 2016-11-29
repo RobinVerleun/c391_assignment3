@@ -81,6 +81,7 @@ int dbt_insert(a3_Triple *triple) {
 	return SUCCESS;
 }
 
+//TODO: DB close for q8 and q9
 
 /*
 int dbt_simple_select() {
