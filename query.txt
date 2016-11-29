@@ -6,7 +6,7 @@ SELECT ?city
 WHERE 
 {
     ?city rdf:type schema:City .
-  	?city dbo:country dbr:Canada .
-  	dbo:country rdf:type ?test .
+  	?city dbo:country dbr:Canada ,
+  						 ?test .
  
 }

@@ -208,13 +208,13 @@ void qr_parse_where(char * line) {
 	strcpy(queries[current_query].var_name, query_var);
 	queries[current_query].var_loc = var_loc;
 
-	
+	/*
 	printf("%d: Sub:%s\n Prd:%s\n Obj:%s\n Varloc:%d\n VarName:%s\n", 
 		current_query, queries[current_query].triple.sub, 
 		queries[current_query].triple.prd, queries[current_query].triple.obj, 
 		queries[current_query].var_loc, queries[current_query].var_name);
 	
-	
+	*/
 	current_query++;	
 }
 
@@ -240,9 +240,12 @@ void qr_parse_period(char *line) {
 //
 /////////////////////////////////////////////////////////////////////////////////
 void qr_parse_comma(char *line) {
+
 	char *obj = strtok(line, "\n\0");
 	obj[strlen(obj) -2] = '\0';
-
+	while (' ' == obj[0] || '\t' == obj[0]) {
+		obj ++;
+	}
 	qr_parse_object(obj);
 }
 
@@ -256,6 +259,9 @@ void qr_parse_semicolon(char *line) {
 	line++;
 	obj = strtok(NULL, "\n\0");
 	obj[strlen(obj) -2] = '\0';
+	while (' ' == obj[0] || '\t' == obj[0]) {
+		obj ++;
+	}
 	qr_parse_predicate(pred);
 	qr_parse_object(obj);
 }
