@@ -27,11 +27,11 @@
 
 	// Test prototypes
 	void qr_print_prefixes(void);
+	void qr_print_triples(void);
 	int qr_printfile(char *filepath);
 
 	// Globals
 	extern a3_Prefix *prefixes;
-	extern char *var_names;
 	extern a3_Triple *triples;
 	extern char **var_names;
 #endif

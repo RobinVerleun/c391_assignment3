@@ -5,7 +5,7 @@ char **var_names;
 int current_prefix_count = 0;
 int prefix_array_size = 0;
 char line_delimiter = '.';
-char *sub, *prd, *obj;
+char sub[URL_MAX], prd[URL_MAX], obj[URL_MAX];
 a3_Triple *triples;
 int triple_array_size = 0;
 int current_triple = 0;
@@ -70,7 +70,7 @@ void qr_trim_whitespace(char *line) {
 	int i; 
 	for(i = 0; line[i]; i++) {
 		if (line[i] == '\n') {
-			line[i + 1] = '\0';
+			line[i] = '\0';
 		}
 	}
 }
@@ -93,6 +93,11 @@ int qr_parseline(char *line) {
 	//Check for SUBJECT
 	else if(strstr(copy, "SELECT") || strstr(copy, "select")) {
 		qr_parse_select(copy);
+	} else if (!strstr(copy, "}") || qr_check_empty(copy) == FAILURE) {
+		printf("test1\n");
+		qr_parse_where(copy);
+		printf("test2\n");
+
 	}
 
 	free(copy);
@@ -179,26 +184,26 @@ void qr_parse_where(char * line) {
 	switch(line_delimiter) {
 		
 		case '.' :
-			line_delimiter = line[strlen(line)-2];
+			line_delimiter = line[strlen(line)-1];
 			qr_parse_period(line);
+			break;
 		case ',' :
-			line_delimiter = line[strlen(line)-2];
+			line_delimiter = line[strlen(line)-1];
 			qr_parse_comma(line);
-
+			break;
 		case ';' :
-			line_delimiter = line[strlen(line)-2];
+			line_delimiter = line[strlen(line)-1];
 			qr_parse_semicolon(line);
 			break;
-
 		default :
 		 fprintf(stderr, "File is improperly formatted.");
 	}
-	
+
 	strcpy(triples[current_triple].sub, sub);
 	strcpy(triples[current_triple].prd, prd);
 	strcpy(triples[current_triple].obj, obj);
 
-	printf("%s   |   %s   |   %s\n", triples[current_triple].sub, triples[current_triple].prd, triples[current_triple].obj);
+	qr_print_triples();
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -212,7 +217,7 @@ void qr_parse_period(char *line) {
 	line++;
 	pred = strtok(NULL, "\t ");
 	line++;
-	obj = strtok(NULL, "\n");
+	obj = strtok(NULL, "\n\0");
 	obj[strlen(obj) - 2] = '\0';
 
 	qr_parse_subject(subj);
@@ -225,8 +230,9 @@ void qr_parse_period(char *line) {
 /////////////////////////////////////////////////////////////////////////////////
 
 void qr_parse_comma(char *line) {
-	char *obj = strtok(line, "\n");
+	char *obj = strtok(line, "\n\0");
 	obj[strlen(obj) -2] = '\0';
+
 	qr_parse_object(obj);
 }
 
@@ -239,9 +245,8 @@ void qr_parse_semicolon(char *line) {
 
 	pred = strtok(line, "\t");
 	line++;
-	obj = strtok(NULL, "\n");
+	obj = strtok(NULL, "\n\0");
 	obj[strlen(obj) -2] = '\0';
-
 	qr_parse_predicate(pred);
 	qr_parse_object(obj);
 }
@@ -256,8 +261,6 @@ void qr_parse_subject(char *line) {
 	int i;
 
 	if(line[0] == '?') {
-
-		printf("Found a variable!\n");
 		strcpy(full_URI, line);
 
 	} else if(line[0] == '<') {
@@ -266,16 +269,19 @@ void qr_parse_subject(char *line) {
 		strcpy(full_URI, store);
 	} else {
 
-		store = strtok(line, ":");
+		store = strtok(line, ":");	
+
 		for(i = 0; i < prefix_array_size; i++) {
 			if(strcmp(prefixes[i].shorthand, store) == 0) {
 				strcpy(full_URI, prefixes[i].uri);
 				break;
 			}
-		}	
+		}		
+
 		line++;
 		strcat(full_URI, strtok(NULL, "\t"));
 	}
+
 	strcpy(sub, full_URI);
 }
 
@@ -289,7 +295,6 @@ void qr_parse_predicate(char *line) {
 	int i;
 
 	if(line[0] == '?') {
-		printf("Found a variable!\n");
 		strcpy(full_URI, line);
 
 	} else	if(line[0] == '<') {
@@ -305,9 +310,9 @@ void qr_parse_predicate(char *line) {
 				break;
 			}
 		}	
+		
 		line++;
 		strcat(full_URI, strtok(NULL, "\t"));
-
 	}
 	strcpy(prd, full_URI);
 }
@@ -334,8 +339,6 @@ void qr_parse_object(char *line) {
 	objpage = strchr(line, ':');
 
 	if ('?' == line[0]) {
-
-		printf("Found a variable!\n");
 		strcpy(obj_URI, line);
 
 	} else if ('<' == curChar) {  //Regular full address
@@ -384,6 +387,7 @@ void qr_parse_object(char *line) {
 		}
 
 	} else if (objpage) {
+
 		store = strtok(line, ":");
 		for(i = 0; i < prefix_array_size; i++) {
 			if(strcmp(prefixes[i].shorthand, store) == 0) {
@@ -398,13 +402,22 @@ void qr_parse_object(char *line) {
 	} else { // deals with literals
 		store = line;
 		strcpy(obj_URI, prd);
-		strcat(obj_URI, "#");
+		printf("not here\n");
 		strcat(obj_URI, store);
 	}
 
 	// Store the obj in our triple struct
 	strcpy(obj, obj_URI);
+}
 
+/////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////
+void qr_print_triples() {
+	int i;
+	for(i = 0; i < current_triple; i++) {
+		printf("%d \n- > %s\n- > %s\n- > %s\n", i, triples[i].sub, triples[i].prd, triples[i].obj);
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////
