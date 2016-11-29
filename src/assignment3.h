@@ -9,7 +9,7 @@
 	// Constants 
 	#define BUFFSIZE 500
 	#define URL_MAX 200
-	#define VARSIZE 20
+	#define VARSIZE 30
 	#define SUCCESS 0
 	#define FAILURE 1
 
@@ -24,6 +24,7 @@
 		a3_Triple triple;
 		int var_loc;
 		char var_name[VARSIZE];
+		
 	} Query;
 
 	typedef struct Prefixes {

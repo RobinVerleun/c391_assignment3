@@ -167,6 +167,8 @@ void qr_parse_select(char * line) {
 		if(strchr(var, '?')) {
 			var_names[i].name = strdup(var);
 			var_names[i].used = 0;
+			var_names[i].in_select = 1;
+			memset(var_names[i].usages, '\0', VARSIZE * 5);
 			i++;
 		}
 		var = strtok(NULL, " ");
@@ -216,6 +218,27 @@ void qr_parse_where(char * line) {
 	
 	*/
 	current_query++;	
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////
+void qr_add_varname(char *line) {
+	int i;
+	int include = 1;
+	for(i = 0; i < var_names_count; i++) {
+		if(strcmp(line, var_names[i].name) == 0) {
+			include = 0;
+		}
+	}
+	if(include) {
+		var_names_count++;
+		var_names = realloc(var_names, var_names_count * sizeof(ReturnVariable));
+		var_names[var_names_count - 1].name = strdup(line);
+		var_names[var_names_count - 1].used = 1;
+		var_names[var_names_count - 1].in_select = 0;
+		memset(var_names[var_names_count - 1].usages, '\0', VARSIZE * 5);
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -278,6 +301,7 @@ void qr_parse_subject(char *line) {
 		strcpy(full_URI, line);
 		strcpy(query_var, line);
 		var_loc = 1;
+		qr_add_varname(line);
 
 	} else if(line[0] == '<') {
 		line ++;
@@ -312,6 +336,7 @@ void qr_parse_predicate(char *line) {
 	if(line[0] == '?') {
 		strcpy(full_URI, line);
 		strcpy(query_var, line);
+		qr_add_varname(line);
 		var_loc = 2;
 
 	} else	if(line[0] == '<') {
@@ -357,6 +382,7 @@ void qr_parse_object(char *line) {
 	if ('?' == line[0]) {
 		strcpy(obj_URI, line);
 		strcpy(query_var, line);
+		qr_add_varname(line);
 		var_loc = 3;
 
 	} else if ('<' == curChar) {  //Regular full address
@@ -427,15 +453,20 @@ void qr_parse_object(char *line) {
 	strcpy(obj, obj_URI);
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////
 void qr_build_query() {
 
 	// Initialize buffers
 	char SELECT[200];
 	char FROM[200];
 	char WHERE[1000];
+	char JOIN[1000];
 	strcpy(SELECT, "SELECT ");
 	strcpy(FROM, "FROM ");
 	strcpy(WHERE, "WHERE ");
+	strcpy(JOIN, "AND ");
 
 	// Iterate through the parsed query statements
 	int i, j;
@@ -443,24 +474,39 @@ void qr_build_query() {
 
 		char buf[URL_MAX];
 		// Build the Select statement
-		// Iterate through the known return variables; if they're there, add them!
-		for(j = 0; j < var_names_count; j++) {
-			if(0 == var_names[j].used && 
-				0 == strcmp(queries[i].var_name, var_names[j].name)) {
-				
-				var_names[j].used = 1;
 
-				if(1 == queries[i].var_loc) {
-					sprintf(buf, "t%d.sub,", i);
-					strcat(SELECT, buf);
-				}
-				else if(2 == queries[i].var_loc) {
-					sprintf(buf, "t%d.prd,", i);
-					strcat(SELECT, buf);
-				}
-				else {
-					sprintf(buf, "t%d.obj,", i);
-					strcat(SELECT, buf);
+		// Iterate through ALL the variables found
+		for(j = 0; j < var_names_count; j++) {
+
+			// Check if the var name was retrieved from the select statement
+			// and if it hasn't been used yet
+			if(var_names[j].in_select && !var_names[j].used){
+
+				// Ensure that this var_name matches the one for the query we're examing
+				// to ensure that the data for the whole loop is consistent
+				if(0 == strcmp(queries[i].var_name, var_names[j].name)) {
+				
+					// Set the variable to used so it will not be reincluded in SELECT
+					var_names[j].used = 1;
+
+					if(1 == queries[i].var_loc) {
+						// Create the query string, append to SELECT, and store usage
+						// in the ReturnVariable struct
+						sprintf(buf, "t%d.sub,", i);
+						strcat(SELECT, buf);
+						strcpy(var_names[j].usages, buf);
+
+					}
+					else if(2 == queries[i].var_loc) {
+						sprintf(buf, "t%d.prd,", i);
+						strcat(SELECT, buf);
+						strcpy(var_names[j].usages, buf);
+					}
+					else {
+						sprintf(buf, "t%d.obj,", i);
+						strcat(SELECT, buf);
+						strcpy(var_names[j].usages, buf);
+					}
 				}
 			}
 		}
@@ -472,16 +518,40 @@ void qr_build_query() {
 
 		// Build the Where statement
 		if(1 == queries[i].var_loc) {
+			for(j = 0; j < var_names_count; j++) {
+				if(strcmp(queries[i].var_name, var_names[j].name) == 0) {
+					sprintf(buf, "t%d.sub", i);
+					if(!strstr(var_names[j].usages, buf)) {
+						strcat(var_names[j].usages, buf);
+					}
+				}
+			}
 			sprintf(buf, "t%d.prd = \"%s\" AND t%d.obj = \"%s\" AND \n", 
 				i, queries[i].triple.prd, i, queries[i].triple.obj);
 			strcat(WHERE, buf);
 		}
 		else if(2 == queries[i].var_loc) {
+			for(j = 0; j < var_names_count; j++) {
+				if(strcmp(queries[i].var_name, var_names[j].name) == 0) {
+					sprintf(buf, "t%d.prd", i);
+					if(!strstr(var_names[j].usages, buf)) {
+						strcat(var_names[j].usages, buf);
+					}
+				}
+			}
 			sprintf(buf, "t%d.sub = \"%s\" AND t%d.obj = \"%s\" AND \n", 
 				i, queries[i].triple.sub, i, queries[i].triple.obj);
 			strcat(WHERE, buf);
 		}
 		else {
+			for(j = 0; j < var_names_count; j++) {
+				if(strcmp(queries[i].var_name, var_names[j].name) == 0) {
+					sprintf(buf, "t%d.obj", i);
+					if(!strstr(var_names[j].usages, buf)) {
+						strcat(var_names[j].usages, buf);
+					}
+				}
+			}
 			sprintf(buf, "t%d.sub = \"%s\" AND t%d.prd = \"%s\" AND \n", 
 				i, queries[i].triple.sub, i, queries[i].triple.prd);
 			strcat(WHERE, buf);
@@ -490,29 +560,9 @@ void qr_build_query() {
 
 	SELECT[strlen(SELECT) - 1] = ' ';
 	FROM[strlen(FROM) -1] = ' ';
-	printf("%s\n%s\n%s\n", SELECT, FROM, WHERE);
+	printf("%s\n%s\n%s\n%s\n", SELECT, FROM, WHERE, JOIN);
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /////////////////////////////////////////////////////////////////////////////////
 //
@@ -521,6 +571,16 @@ void qr_print_prefixes() {
 	int i;
 	for(i = 0; i < current_prefix_count; i++) {
 		printf("%d) %s : %s\n", i, prefixes[i].shorthand, prefixes[i].uri);
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////
+void qr_print_varnames() {
+	int i;
+	for(i = 0; i < var_names_count; i++) {
+		printf("%d) Var:%s usages:%s\n", i, var_names[i].name, var_names[i].usages);
 	}
 }
 

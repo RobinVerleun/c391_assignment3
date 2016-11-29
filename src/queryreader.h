@@ -7,9 +7,11 @@
 	#define PARSED_PREFIX 2
 
 	// Struct Definition
-	typedef struct ReturnVariables {
+	typedef struct Variables {
 		char *name;
+		char usages[VARSIZE * 5];
 		int used;
+		int in_select;
 	} ReturnVariable;
 
 	// Prototyping
@@ -22,6 +24,7 @@
 	// Parse the different line conditions
 	int qr_parseline(char *line);
 	void qr_add_prefix(char *line, int index);
+	void qr_add_varname(char *line);
 	void qr_parse_select(char *line);
 	void qr_parse_where(char *line);
 	void qr_parse_query(char *line, int num_var);
@@ -40,6 +43,7 @@
 
 	// Test prototypes
 	void qr_print_prefixes(void);
+	void qr_print_varnames(void);
 	int qr_printfile(char *filepath);
 
 	// Globals
