@@ -32,12 +32,15 @@ int main(int argc, char **argv) {
 	char FROM[200];
 	strcpy(FROM, "FROM ");
 	char WHERE[1000];
-	strcpy(WHERE, "WHERE ");
+	strcpy(WHERE, " WHERE ");
 
 	// Make the SELECT statement.
 	int i;
 	for(i = 0; i < num_var; i++) {
-
+		if(queries[i].var_loc == 1) {
+			strcat(SELECT, sprintf("t%d.sub ", i));
+			printf("%s\n", SELECT);
+		}
 	}
 
 	return 0;
