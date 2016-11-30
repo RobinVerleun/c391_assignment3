@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
 		return FAILURE;
 	}
 
-	if(qr_readquery(argv[2] == FAILURE ) {
+	if(qr_readquery(argv[2]) == FAILURE ) {
 		return FAILURE;
 	}
 

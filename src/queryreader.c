@@ -37,7 +37,6 @@ int qr_readquery(char *filepath) {
 	}
 
 	// Main functionality 
-	int rc;
 	while( fgets(buf, BUFFSIZE, ptr) != NULL ) {
 		if( qr_check_empty(buf) == FAILURE) {
 			qr_trim_whitespace(buf);
@@ -242,11 +241,13 @@ void qr_add_varname(char *line) {
 		var_names_count++;
 		var_names = realloc(var_names, var_names_count * sizeof(ReturnVariable));
 		var_names[var_names_count - 1].name = strdup(line);
-		var_names[var_names_count - 1].used = 1;
+		
 		if(return_all) {
 			var_names[var_names_count - 1].in_select = 1;
+			var_names[var_names_count - 1].used = 0;
 		} else {
 			var_names[var_names_count - 1].in_select = 0;
+			var_names[var_names_count - 1].used = 1;
 		}
 		memset(var_names[var_names_count - 1].usages, '\0', VARSIZE * 2);
 	}
@@ -262,8 +263,13 @@ void qr_parse_period(char *line) {
 	line++;
 	pred = strtok(NULL, "\t ");
 	line++;
-	obj = strtok(NULL, "\n\0.");
-	obj[strlen(obj) - 1] = '\0';
+	obj = strtok(NULL, "\n\0");
+	
+	if(strchr(line, ' ')) {
+		obj[strlen(obj) - 1] = '\0';
+	} else {
+		obj[strlen(obj) - 2] = '\0';
+	}
 
 	qr_parse_subject(subj);
 	qr_parse_predicate(pred);
@@ -275,8 +281,14 @@ void qr_parse_period(char *line) {
 /////////////////////////////////////////////////////////////////////////////////
 void qr_parse_comma(char *line) {
 
-	char *obj = strtok(line, "\n\0.");
-	obj[strlen(obj) - 1] = '\0';
+	char *obj = strtok(line, "\n\0");
+
+	if(strchr(line, ' ')) {
+		obj[strlen(obj) - 1] = '\0';
+	} else {
+		obj[strlen(obj) - 2] = '\0';
+	}
+
 	while (' ' == obj[0] || '\t' == obj[0]) {
 		obj ++;
 	}
@@ -291,8 +303,14 @@ void qr_parse_semicolon(char *line) {
 
 	pred = strtok(line, "\t");
 	line++;
-	obj = strtok(NULL, "\n\0.");
-	obj[strlen(obj) - 1] = '\0';
+	obj = strtok(NULL, "\n\0");
+	
+	if(strchr(line, ' ')) {
+		obj[strlen(obj) - 1] = '\0';
+	} else {
+		obj[strlen(obj) - 2] = '\0';
+	}
+
 	while (' ' == obj[0] || '\t' == obj[0]) {
 		obj ++;
 	}
@@ -460,7 +478,6 @@ void qr_parse_object(char *line) {
 		strcpy(obj_URI, prd);
 		strcat(obj_URI, store);
 	}
-
 	// Store the obj in our triple struct
 	strcpy(obj, obj_URI);
 }
@@ -489,7 +506,7 @@ void qr_build_query(char **finalResult) {
 
 		// Iterate through ALL the variables found
 		for(j = 0; j < var_names_count; j++) {
-
+	
 			// Check if the var name was retrieved from the select statement
 			// and if it hasn't been used yet
 			if(var_names[j].in_select && !var_names[j].used){
