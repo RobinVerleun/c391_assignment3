@@ -90,7 +90,12 @@ int dbt_query(char *sql_stmt) {
 	}
 
 	while(sqlite3_step(stmt) == SQLITE_ROW) {
-		printf("%s\n", sqlite3_column_text(stmt, 0));
+		int columns = sqlite3_column_count(stmt);
+		int i;
+		for(i = 0; i < columns; i++) {
+			printf("|| %s ", sqlite3_column_text(stmt, i));
+		}
+		printf("\n");
 	}
 
 	return SUCCESS;
