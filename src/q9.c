@@ -22,6 +22,7 @@ int main(int argc, char **argv) {
 	qr_build_query(&sql_stmt);
 	printf("%s\n", sql_stmt);
 
+	qr_print_output();
 	if(dbt_query(sql_stmt) == FAILURE ){
 		return FAILURE;
 	}
