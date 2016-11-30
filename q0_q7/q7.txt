@@ -1,0 +1,8 @@
+No indexes were used for our database. Our database is exhaustive in nature - a single table which encompasses the entirety of the graph data. Each field is set us as a full URI.
+Because of how the turtle files are structred, a large amount of the data is already
+grouped by subjects and predicates.
+
+Additionally, every field in the table is stores as a varchar string. This doesn't allow 
+the same speed of sorting as a numeric based identification system would. Therefore, 
+no indexing is used on this system - not because it would harm the system, but because
+the storage cost of indexing mostly sorted data.
