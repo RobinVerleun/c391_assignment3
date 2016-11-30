@@ -211,7 +211,7 @@ void qr_parse_where(char * line) {
 	queries[current_query].var_loc = var_loc;
 
 	/*
-	printf("%d: Sub:%s\n Prd:%s\n Obj:%s\n Varloc:%d\n VarName:%s\n", 
+	printf("START HERE:%d: Sub:%s\n Prd:%s\n Obj:%s\n Varloc:%d\n VarName:%s\n", 
 		current_query, queries[current_query].triple.sub, 
 		queries[current_query].triple.prd, queries[current_query].triple.obj, 
 		queries[current_query].var_loc, queries[current_query].var_name);
@@ -251,8 +251,8 @@ void qr_parse_period(char *line) {
 	line++;
 	pred = strtok(NULL, "\t ");
 	line++;
-	obj = strtok(NULL, "\n\0");
-	obj[strlen(obj) - 2] = '\0';
+	obj = strtok(NULL, "\n\0.");
+	obj[strlen(obj) - 1] = '\0';
 
 	qr_parse_subject(subj);
 	qr_parse_predicate(pred);
@@ -264,8 +264,8 @@ void qr_parse_period(char *line) {
 /////////////////////////////////////////////////////////////////////////////////
 void qr_parse_comma(char *line) {
 
-	char *obj = strtok(line, "\n\0");
-	obj[strlen(obj) -2] = '\0';
+	char *obj = strtok(line, "\n\0.");
+	obj[strlen(obj) - 1] = '\0';
 	while (' ' == obj[0] || '\t' == obj[0]) {
 		obj ++;
 	}
@@ -280,8 +280,8 @@ void qr_parse_semicolon(char *line) {
 
 	pred = strtok(line, "\t");
 	line++;
-	obj = strtok(NULL, "\n\0");
-	obj[strlen(obj) -2] = '\0';
+	obj = strtok(NULL, "\n\0.");
+	obj[strlen(obj) - 1] = '\0';
 	while (' ' == obj[0] || '\t' == obj[0]) {
 		obj ++;
 	}
@@ -439,6 +439,7 @@ void qr_parse_object(char *line) {
 				break;
 			}
 		}
+
 		// Append the resource to the prefix and store it in triple 
 		line++;
 		strcat(obj_URI, strtok(NULL, ""));
