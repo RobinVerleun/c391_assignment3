@@ -39,7 +39,7 @@
 	void qr_parse_subject(char *line);
 
 	// Build a SQLite Query
-	void qr_build_query(void);
+	void qr_build_query(char **);
 
 	// Test prototypes
 	void qr_print_prefixes(void);

@@ -81,7 +81,20 @@ int dbt_insert(a3_Triple *triple) {
 	return SUCCESS;
 }
 
-//TODO: DB close for q8 and q9
+int dbt_query(char *sql_stmt) {
+	rc = sqlite3_prepare_v2(db, sql_stmt, -1, &stmt, 0);
+	if (rc != SQLITE_OK) {
+		fprintf(stderr, "Step failed (dbt_query): %s\n", sqlite3_errmsg(db));
+		sqlite3_close(db);
+		return FAILURE;
+	}
+
+	while(sqlite3_step(stmt) == SQLITE_ROW) {
+		printf("%s\n", sqlite3_column_text(stmt, 0));
+	}
+
+	return SUCCESS;
+}
 
 /*
 int dbt_simple_select() {

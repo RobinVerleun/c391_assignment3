@@ -1,5 +1,0 @@
-		Hello with tabs 			
-  Hello with spaces  
-
-
- 	 	Hello with spaces and tabs 	 	

@@ -456,7 +456,7 @@ void qr_parse_object(char *line) {
 /////////////////////////////////////////////////////////////////////////////////
 //
 /////////////////////////////////////////////////////////////////////////////////
-void qr_build_query() {
+void qr_build_query(char **finalResult) {
 
 	// Initialize buffers
 	char SELECT[200];
@@ -600,12 +600,12 @@ void qr_build_query() {
 		JOIN[1] = '\0';
 	}
 
-	char finalResult[strlen(SELECT) + strlen(FROM) + strlen(WHERE) + strlen(JOIN)];
-	strcpy(finalResult, SELECT);
-	strcat(finalResult, FROM);
-	strcat(finalResult, WHERE);
-	strcat(finalResult, JOIN);
-	printf("%s\n", finalResult);
+	*finalResult = malloc(strlen(SELECT) + strlen(FROM) + strlen(WHERE) + strlen(JOIN));
+	strcpy(*finalResult, SELECT);
+	strcat(*finalResult, FROM);
+	strcat(*finalResult, WHERE);
+	strcat(*finalResult, JOIN);
+	//printf("%s\n", *finalResult);
 }
 
 /////////////////////////////////////////////////////////////////////////////////
