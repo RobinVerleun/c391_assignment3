@@ -16,6 +16,7 @@ int query_array_size = 0;
 int current_query = 0;
 
 char line_delimiter = '.';
+int return_all = 0;
 
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -150,6 +151,12 @@ void qr_parse_select(char * line) {
 	// Count the number of variables
 	strtok(count_line, " ");
 	char *var = strtok(NULL, " ");
+
+	if(strchr(var, '*')){
+		return_all = 1;
+		return;
+	}
+
 	while(var != NULL) {
 		if(strchr(var, '?')) {
 			var_names_count++;
@@ -168,7 +175,7 @@ void qr_parse_select(char * line) {
 			var_names[i].name = strdup(var);
 			var_names[i].used = 0;
 			var_names[i].in_select = 1;
-			memset(var_names[i].usages, '\0', VARSIZE * 5);
+			memset(var_names[i].usages, '\0', VARSIZE * 2);
 			i++;
 		}
 		var = strtok(NULL, " ");
@@ -236,8 +243,12 @@ void qr_add_varname(char *line) {
 		var_names = realloc(var_names, var_names_count * sizeof(ReturnVariable));
 		var_names[var_names_count - 1].name = strdup(line);
 		var_names[var_names_count - 1].used = 1;
-		var_names[var_names_count - 1].in_select = 0;
-		memset(var_names[var_names_count - 1].usages, '\0', VARSIZE * 5);
+		if(return_all) {
+			var_names[var_names_count - 1].in_select = 1;
+		} else {
+			var_names[var_names_count - 1].in_select = 0;
+		}
+		memset(var_names[var_names_count - 1].usages, '\0', VARSIZE * 2);
 	}
 }
 

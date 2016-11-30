@@ -10,14 +10,20 @@ int main(int argc, char **argv) {
 	database_name = malloc(strlen(argv[1]));
 	strcpy(database_name, argv[1]);
 
-	dbt_open();
+	if( dbt_open() == FAILURE ) {
+		return FAILURE;
+	}
 
-	qr_readquery(argv[2]);
+	if(qr_readquery(argv[2] == FAILURE ) {
+		return FAILURE;
+	}
 
 	char *sql_stmt;
 	qr_build_query(&sql_stmt);
 
-	dbt_query(sql_stmt);
+	if(dbt_query(sql_stmt) == FAILURE ){
+		return FAILURE;
+	}
 	//printf("%s\n", prefixes[0].uri);
 	//qr_print_prefixes();
 
