@@ -5,7 +5,7 @@ int main(int argc, char **argv) {
 	//qr_printfile("./query.txt");
 	qr_readquery("./query.txt");
 	qr_build_query();
-	qr_print_varnames();
+	//qr_print_varnames();
 	//printf("%s\n", prefixes[0].uri);
 	//qr_print_prefixes();
 

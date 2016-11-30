@@ -466,7 +466,7 @@ void qr_build_query() {
 	strcpy(SELECT, "SELECT ");
 	strcpy(FROM, "FROM ");
 	strcpy(WHERE, "WHERE ");
-	strcpy(JOIN, "AND ");
+	strcpy(JOIN, "");
 
 	// Iterate through the parsed query statements
 	int i, j;
@@ -520,48 +520,92 @@ void qr_build_query() {
 		if(1 == queries[i].var_loc) {
 			for(j = 0; j < var_names_count; j++) {
 				if(strcmp(queries[i].var_name, var_names[j].name) == 0) {
-					sprintf(buf, "t%d.sub", i);
+					sprintf(buf, "t%d.sub,", i);
 					if(!strstr(var_names[j].usages, buf)) {
 						strcat(var_names[j].usages, buf);
 					}
 				}
 			}
-			sprintf(buf, "t%d.prd = \"%s\" AND t%d.obj = \"%s\" AND \n", 
+			sprintf(buf, "t%d.prd = \"%s\" AND t%d.obj = \"%s\" AND ", 
 				i, queries[i].triple.prd, i, queries[i].triple.obj);
 			strcat(WHERE, buf);
 		}
 		else if(2 == queries[i].var_loc) {
 			for(j = 0; j < var_names_count; j++) {
 				if(strcmp(queries[i].var_name, var_names[j].name) == 0) {
-					sprintf(buf, "t%d.prd", i);
+					sprintf(buf, "t%d.prd,", i);
 					if(!strstr(var_names[j].usages, buf)) {
 						strcat(var_names[j].usages, buf);
 					}
 				}
 			}
-			sprintf(buf, "t%d.sub = \"%s\" AND t%d.obj = \"%s\" AND \n", 
+			sprintf(buf, "t%d.sub = \"%s\" AND t%d.obj = \"%s\" AND ", 
 				i, queries[i].triple.sub, i, queries[i].triple.obj);
 			strcat(WHERE, buf);
 		}
 		else {
 			for(j = 0; j < var_names_count; j++) {
 				if(strcmp(queries[i].var_name, var_names[j].name) == 0) {
-					sprintf(buf, "t%d.obj", i);
+					sprintf(buf, "t%d.obj,", i);
 					if(!strstr(var_names[j].usages, buf)) {
 						strcat(var_names[j].usages, buf);
 					}
 				}
 			}
-			sprintf(buf, "t%d.sub = \"%s\" AND t%d.prd = \"%s\" AND \n", 
+			sprintf(buf, "t%d.sub = \"%s\" AND t%d.prd = \"%s\" AND ", 
 				i, queries[i].triple.sub, i, queries[i].triple.prd);
 			strcat(WHERE, buf);
 		}
 	}
 
-	SELECT[strlen(SELECT) - 1] = ' ';
-	FROM[strlen(FROM) -1] = ' ';
-	printf("%s\n%s\n%s\n%s\n", SELECT, FROM, WHERE, JOIN);
+	// Make the final join
+	for(i = 0; i < var_names_count; i++) {
 
+		// Make a safe copy
+		char *cp = strdup(var_names[i].usages);
+		char buf[50];
+
+		// Going through each variable found
+		char *first_var = strtok(cp, ",");
+		char *second_var = strtok(NULL, ",");
+		while(second_var != NULL) {
+
+			//Blank space if left to overwrite in case of AND
+			sprintf(buf, "%s=%s     ", first_var, second_var);
+			strcat(JOIN, buf);
+			second_var = strtok(NULL, ",");
+		}
+		int j;
+		for(j = 0; j < strlen(JOIN); j++) {
+			if(JOIN[j] == ' ') {
+				JOIN[j+1] = 'A';
+				JOIN[j+2] = 'N';
+				JOIN[j+3] = 'D';
+				JOIN[j+4] = ' ';
+				j = j+4;
+			}
+		}
+
+	}	
+
+	
+	SELECT[strlen(SELECT) - 1] = ' ';
+	FROM[strlen(FROM) - 1] = ' ';
+	if(strlen(JOIN) > 1) {
+		JOIN[strlen(JOIN) - 5] = ';';
+		JOIN[strlen(JOIN) - 4] = '\0';
+	} else {
+		WHERE[strlen(WHERE) - 5] = '\0';
+		JOIN[0] = ';';
+		JOIN[1] = '\0';
+	}
+
+	char finalResult[strlen(SELECT) + strlen(FROM) + strlen(WHERE) + strlen(JOIN)];
+	strcpy(finalResult, SELECT);
+	strcat(finalResult, FROM);
+	strcat(finalResult, WHERE);
+	strcat(finalResult, JOIN);
+	printf("%s\n", finalResult);
 }
 
 /////////////////////////////////////////////////////////////////////////////////
