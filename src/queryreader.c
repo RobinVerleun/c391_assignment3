@@ -251,8 +251,13 @@ void qr_parse_period(char *line) {
 	line++;
 	pred = strtok(NULL, "\t ");
 	line++;
-	obj = strtok(NULL, "\n\0.");
-	obj[strlen(obj) - 1] = '\0';
+	obj = strtok(NULL, "\n\0");
+	
+	if(strchr(line, ' ')) {
+		obj[strlen(obj) - 1] = '\0';
+	} else {
+		obj[strlen(obj) - 2] = '\0';
+	}
 
 	qr_parse_subject(subj);
 	qr_parse_predicate(pred);
@@ -264,8 +269,14 @@ void qr_parse_period(char *line) {
 /////////////////////////////////////////////////////////////////////////////////
 void qr_parse_comma(char *line) {
 
-	char *obj = strtok(line, "\n\0.");
-	obj[strlen(obj) - 1] = '\0';
+	char *obj = strtok(line, "\n\0");
+
+	if(strchr(line, ' ')) {
+		obj[strlen(obj) - 1] = '\0';
+	} else {
+		obj[strlen(obj) - 2] = '\0';
+	}
+
 	while (' ' == obj[0] || '\t' == obj[0]) {
 		obj ++;
 	}
@@ -280,8 +291,14 @@ void qr_parse_semicolon(char *line) {
 
 	pred = strtok(line, "\t");
 	line++;
-	obj = strtok(NULL, "\n\0.");
-	obj[strlen(obj) - 1] = '\0';
+	obj = strtok(NULL, "\n\0");
+	
+	if(strchr(line, ' ')) {
+		obj[strlen(obj) - 1] = '\0';
+	} else {
+		obj[strlen(obj) - 2] = '\0';
+	}
+
 	while (' ' == obj[0] || '\t' == obj[0]) {
 		obj ++;
 	}
@@ -449,7 +466,6 @@ void qr_parse_object(char *line) {
 		strcpy(obj_URI, prd);
 		strcat(obj_URI, store);
 	}
-
 	// Store the obj in our triple struct
 	strcpy(obj, obj_URI);
 }
