@@ -283,11 +283,7 @@ void qr_parse_period(char *line) {
 	line++;
 	objt = strtok(NULL, "\n\0");
 	
-	if(strchr(line, ' ')) {
-		objt[strlen(objt) - 2] = '\0';
-	} else {
-		objt[strlen(objt) - 1] = '\0';
-	}
+	objt[strlen(objt) - 1] = '\0';
 
 	qr_parse_subject(subj);
 	qr_parse_predicate(pred);
@@ -303,11 +299,7 @@ void qr_parse_comma(char *line) {
 
 	char *objt = strtok(line, "\n\0");
 
-	if(strchr(line, ' ')) {
-		objt[strlen(objt) - 2] = '\0';
-	} else {
-		objt[strlen(objt) - 1] = '\0';
-	}
+	objt[strlen(objt) - 1] = '\0';
 
 	while (' ' == objt[0] || '\t' == objt[0]) {
 		objt ++;
@@ -327,11 +319,7 @@ void qr_parse_semicolon(char *line) {
 	line++;
 	objt = strtok(NULL, "\n\0");
 	
-	if(strchr(line, ' ')) {
-		objt[strlen(objt) - 2] = '\0';
-	} else {
-		objt[strlen(objt) - 1] = '\0';
-	}
+	objt[strlen(objt) - 1] = '\0';
 
 	while (' ' == objt[0] || '\t' == objt[0]) {
 		objt ++;
@@ -427,7 +415,18 @@ void qr_parse_object(char *line) {
 	char obj_URI[URL_MAX];
 	char curChar = line[0];
 	char *store;
-	int i;
+	int i,j;
+
+	// Trim leading whitespace
+	while (' ' == line[0] || '\t' == line[0]) {
+		line ++;
+	}
+	// Trim trailing blank spaces
+	for (j= strlen(line) - 1; j>0; j--){
+		if (line[j] == ' ' || line[j] == '\t') {
+			line[j] = '\0';
+		}
+	}
 
 	//Search for ^^ -- dealing with prefix call
 	char *objpref;
