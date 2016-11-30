@@ -13,6 +13,7 @@ int main(int argc, char **argv) {
 	if( dbt_open() == FAILURE ) {
 		return FAILURE;
 	}
+	
 	if( dbt_create_table() == FAILURE ) {
 		return FAILURE;
 	}

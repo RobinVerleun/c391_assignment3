@@ -24,8 +24,6 @@ int main(int argc, char **argv) {
 	if(dbt_query(sql_stmt) == FAILURE ){
 		return FAILURE;
 	}
-	//printf("%s\n", prefixes[0].uri);
-	//qr_print_prefixes();
 
 	free(queries);
 	free(var_names);
