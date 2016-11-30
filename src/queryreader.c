@@ -424,8 +424,6 @@ void qr_parse_predicate(char *line) {
 /////////////////////////////////////////////////////////////////////////////////
 void qr_parse_object(char *line) {
 	
-
-		printf("BASTARD: %s\n", line);
 	char obj_URI[URL_MAX];
 	char curChar = line[0];
 	char *store;
@@ -670,7 +668,7 @@ void qr_build_query(char **finalResult) {
 	strcat(*finalResult, FROM);
 	strcat(*finalResult, WHERE);
 	strcat(*finalResult, JOIN);
-	printf("%s\n", *finalResult);
+	//printf("%s\n", *finalResult);
 
 	qr_print_output();
 
