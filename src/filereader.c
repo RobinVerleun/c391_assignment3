@@ -34,7 +34,6 @@ int fr_readfile(char *filepath) {
 				return FAILURE;
 			}
 		}
-		
 	}
 
 	/* Teardown */
@@ -144,6 +143,11 @@ void fr_parse_comma(char *line, a3_Triple *triple) {
 	fr_parse_object(obj, triple);
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+// Parses the line, knowing that only the object, and predicate field of the triple
+// will be changed. Only called if line_delimiter == ';' from the previous line.
+// Saves the last character before the line is altered.
+/////////////////////////////////////////////////////////////////////////////////
 void fr_parse_semicolon(char *line, a3_Triple *triple) {
 	char *pred, *obj;
 
@@ -156,6 +160,11 @@ void fr_parse_semicolon(char *line, a3_Triple *triple) {
 	fr_parse_object(obj, triple);
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+// Parses our subject parameter given as a string containing only the subject field
+// Checks for all possible value types it could be and parses accordingly. Then 
+// creates the full URI for the field.
+/////////////////////////////////////////////////////////////////////////////////
 void fr_parse_subject(char *line, a3_Triple *triple) {
 	char full_URI[URL_MAX];
 	char *store;
@@ -180,6 +189,11 @@ void fr_parse_subject(char *line, a3_Triple *triple) {
 	strcpy(triple->sub, full_URI);
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+// Parses our predicate parameter given as a string containing only the predicate field
+// Checks for all possible value types it could be and parses accordingly. Then 
+// creates the full URI for the field.
+/////////////////////////////////////////////////////////////////////////////////
 void fr_parse_predicate(char *line, a3_Triple *triple) {
 	char full_URI[URL_MAX];
 	char *store;
@@ -205,6 +219,11 @@ void fr_parse_predicate(char *line, a3_Triple *triple) {
 	strcpy(triple->prd, full_URI);
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+// Parses our object parameter given as a string containing only the object field
+// Checks for all possible value types it could be and parses accordingly. Then 
+// creates the full URI for the field.
+/////////////////////////////////////////////////////////////////////////////////
 void fr_parse_object(char *line, a3_Triple *triple) {
 	
 	char obj_URI[URL_MAX];
@@ -292,6 +311,9 @@ void fr_parse_object(char *line, a3_Triple *triple) {
 
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////
 int fr_printfile(char *filepath) {
 	FILE *ptr;
 	char *buf;
@@ -315,6 +337,9 @@ int fr_printfile(char *filepath) {
 	return SUCCESS;
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+// 
+/////////////////////////////////////////////////////////////////////////////////
 void fr_print_prefixes() {
 	int i;
 	for(i = 0; i < current_prefix_count; i++) {
