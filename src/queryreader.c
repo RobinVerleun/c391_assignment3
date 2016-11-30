@@ -284,9 +284,9 @@ void qr_parse_period(char *line) {
 	objt = strtok(NULL, "\n\0");
 	
 	if(strchr(line, ' ')) {
-		objt[strlen(objt) - 1] = '\0';
-	} else {
 		objt[strlen(objt) - 2] = '\0';
+	} else {
+		objt[strlen(objt) - 1] = '\0';
 	}
 
 	qr_parse_subject(subj);
@@ -304,9 +304,9 @@ void qr_parse_comma(char *line) {
 	char *objt = strtok(line, "\n\0");
 
 	if(strchr(line, ' ')) {
-		objt[strlen(objt) - 1] = '\0';
-	} else {
 		objt[strlen(objt) - 2] = '\0';
+	} else {
+		objt[strlen(objt) - 1] = '\0';
 	}
 
 	while (' ' == objt[0] || '\t' == objt[0]) {
@@ -328,9 +328,9 @@ void qr_parse_semicolon(char *line) {
 	objt = strtok(NULL, "\n\0");
 	
 	if(strchr(line, ' ')) {
-		objt[strlen(objt) - 1] = '\0';
-	} else {
 		objt[strlen(objt) - 2] = '\0';
+	} else {
+		objt[strlen(objt) - 1] = '\0';
 	}
 
 	while (' ' == objt[0] || '\t' == objt[0]) {
@@ -424,6 +424,8 @@ void qr_parse_predicate(char *line) {
 /////////////////////////////////////////////////////////////////////////////////
 void qr_parse_object(char *line) {
 	
+
+		printf("BASTARD: %s\n", line);
 	char obj_URI[URL_MAX];
 	char curChar = line[0];
 	char *store;
@@ -668,7 +670,7 @@ void qr_build_query(char **finalResult) {
 	strcat(*finalResult, FROM);
 	strcat(*finalResult, WHERE);
 	strcat(*finalResult, JOIN);
-	//printf("%s\n", *finalResult);
+	printf("%s\n", *finalResult);
 
 	qr_print_output();
 
@@ -681,10 +683,10 @@ void qr_print_output() {
 
 	int k;
 
-	printf("%s\t\t\t\t\t", var_names[0].name);
+	printf("%s\t\t\t", var_names[0].name);
 
 	for (k = 1; k < var_names_count; k++)  {
-		printf("||%s\t\t\t\t\t", var_names[k].name);
+		printf("||%s\t\t\t", var_names[k].name);
 	}
 
 	printf("\n");
