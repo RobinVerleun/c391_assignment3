@@ -8,3 +8,11 @@ run the object file as such
 For q9.C:
 run the object file as such
 ./q9 <Database Name> <SPARQL Query Filepath>
+
+Limitations on q9:
+
+q9 cannot handle certain queries due to lack of implementation.
+
+	1) If a SPARQL query uses the keyword FILTER
+	2) If a SPARQL query has multiple variables in the same triple,
+		ie) ?x rdf:type ?y

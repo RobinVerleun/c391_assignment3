@@ -4,4 +4,6 @@ PREFIX dbr: <http://dbpedia.org/resource/>
 PREFIX dbo: <http://dbpedia.org/ontology/>
 SELECT * WHERE {
    	dbr:Edmonton rdf:type ?type .
+   	?city rdf:type schema:City .
+  	?city dbo:country dbr:Canada .
 }

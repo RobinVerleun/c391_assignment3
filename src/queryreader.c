@@ -429,6 +429,7 @@ void qr_parse_object(char *line) {
 	char *store;
 	int i;
 
+	printf("%s\n", line);
 	//Search for ^^ -- dealing with prefix call
 	char *objpref;
 	objpref = strchr(line, '^');
