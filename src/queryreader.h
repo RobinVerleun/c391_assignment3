@@ -42,6 +42,7 @@
 	void qr_build_query(char **);
 
 	// Test prototypes
+	void qr_print_output();
 	void qr_print_prefixes(void);
 	void qr_print_varnames(void);
 	int qr_printfile(char *filepath);

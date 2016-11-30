@@ -623,6 +623,26 @@ void qr_build_query(char **finalResult) {
 	strcat(*finalResult, WHERE);
 	strcat(*finalResult, JOIN);
 	//printf("%s\n", *finalResult);
+
+	qr_print_output();
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////
+void qr_print_output() {
+
+	int k;
+
+	printf("%s\t\t\t\t\t", var_names[0].name);
+
+	for (k = 1; k < var_names_count; k++)  {
+		printf("||%s\t\t\t\t\t", var_names[k].name);
+	}
+
+	printf("\n");
+
 }
 
 /////////////////////////////////////////////////////////////////////////////////
