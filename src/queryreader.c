@@ -20,7 +20,9 @@ int return_all = 0;
 
 
 /////////////////////////////////////////////////////////////////////////////////
-//
+// Read a file line by line. Each line is passed into a parser. Triples are then
+// created and stored in an array of triples so that a sqlite query
+// can be constructed and used to query our relational database
 /////////////////////////////////////////////////////////////////////////////////
 int qr_readquery(char *filepath) {
 	FILE *ptr;
@@ -51,7 +53,7 @@ int qr_readquery(char *filepath) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-//
+// Checks the line of the query given to it for only blank spaces to see if it is empty
 /////////////////////////////////////////////////////////////////////////////////
 int qr_check_empty(char *line) {
 	while(line[0] == ' ' || line[0] == '\t' || line[0] == '\n') { 
@@ -65,7 +67,7 @@ int qr_check_empty(char *line) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-//
+// 
 /////////////////////////////////////////////////////////////////////////////////
 void qr_trim_whitespace(char *line) {
 	//TODO: Trim whitespace
@@ -82,7 +84,10 @@ void qr_trim_whitespace(char *line) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-//
+// Takes in a line. Handles the purpose of the line in our relational format.
+// ie. stores prefix in array to later create the uri, parse select statement for 
+// return variables of our constructed query, parse where clause to then parse
+// sub, prd, obj of the clause 
 /////////////////////////////////////////////////////////////////////////////////
 int qr_parseline(char *line) {
 
@@ -107,9 +112,10 @@ int qr_parseline(char *line) {
 	return SUCCESS;
 }
 
-/////////////////////////////////////////////////////////////////////////////////
-//
-/////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+// Adds a prefix to the external prefix array. If the prefix array is 
+// too small, double the size of the array. Stores the shorthand and URI.
+///////////////////////////////////////////////////////////////////////////////
 void qr_add_prefix(char *line, int entry_num) {
 
 	// Check the array. If prefix_count is larger, double size and record. 
@@ -129,7 +135,7 @@ void qr_add_prefix(char *line, int entry_num) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-// 
+// Dynamically allocates our query array.
 /////////////////////////////////////////////////////////////////////////////////
 void qr_addmemto_queries(int entry_num) {
 
@@ -183,7 +189,10 @@ void qr_parse_select(char * line) {
 	
 
 /////////////////////////////////////////////////////////////////////////////////
-//
+// Parses the where clause(s) of the given query by first capturing the line
+// delimiter and based on the previous delimiter (defualted to '.') parse the
+// sub, prd, obj necessary. Since sub, prd, obj are global we only rewrite the
+// URI when necessary.
 /////////////////////////////////////////////////////////////////////////////////
 void qr_parse_where(char * line) {
 
@@ -253,73 +262,82 @@ void qr_add_varname(char *line) {
 	}
 }
 
-/////////////////////////////////////////////////////////////////////////////////
-//
-/////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+// Parses the line, knowing that all values read belong into the triple 
+// object. Only called if line_delimiter == '.' from the previous line.
+// Saves the last character before the line is altered.
+///////////////////////////////////////////////////////////////////////////////
 void qr_parse_period(char *line) {
-	char *subj, *pred, *obj;
+	char *subj, *pred, *objt;
 
 	subj = strtok(line, "\t ");
 	line++;
 	pred = strtok(NULL, "\t ");
 	line++;
-	obj = strtok(NULL, "\n\0");
+	objt = strtok(NULL, "\n\0");
 	
 	if(strchr(line, ' ')) {
-		obj[strlen(obj) - 1] = '\0';
+		objt[strlen(objt) - 1] = '\0';
 	} else {
-		obj[strlen(obj) - 2] = '\0';
+		objt[strlen(objt) - 2] = '\0';
 	}
 
 	qr_parse_subject(subj);
 	qr_parse_predicate(pred);
-	qr_parse_object(obj);
+	qr_parse_object(objt);
 }
 
-/////////////////////////////////////////////////////////////////////////////////
-//
-/////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+// Parses the line, knowing that only the object field of the triple
+// will be changed. Only called if line_delimiter == ',' from the previous line.
+// Saves the last character before the line is altered.
+///////////////////////////////////////////////////////////////////////////////
 void qr_parse_comma(char *line) {
 
-	char *obj = strtok(line, "\n\0");
+	char *objt = strtok(line, "\n\0");
 
 	if(strchr(line, ' ')) {
-		obj[strlen(obj) - 1] = '\0';
+		objt[strlen(objt) - 1] = '\0';
 	} else {
-		obj[strlen(obj) - 2] = '\0';
+		objt[strlen(objt) - 2] = '\0';
 	}
 
-	while (' ' == obj[0] || '\t' == obj[0]) {
-		obj ++;
+	while (' ' == objt[0] || '\t' == objt[0]) {
+		objt ++;
 	}
-	qr_parse_object(obj);
+	qr_parse_object(objt);
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-//
+// Parses the line, knowing that only the object, and predicate field of the triple
+// will be changed. Only called if line_delimiter == ';' from the previous line.
+// Saves the last character before the line is altered.
 /////////////////////////////////////////////////////////////////////////////////
 void qr_parse_semicolon(char *line) {
-	char *pred, *obj;
+	char *pred, *objt;
 
 	pred = strtok(line, "\t");
 	line++;
-	obj = strtok(NULL, "\n\0");
+	objt = strtok(NULL, "\n\0");
 	
 	if(strchr(line, ' ')) {
-		obj[strlen(obj) - 1] = '\0';
+		objt[strlen(objt) - 1] = '\0';
 	} else {
-		obj[strlen(obj) - 2] = '\0';
+		objt[strlen(objt) - 2] = '\0';
 	}
 
-	while (' ' == obj[0] || '\t' == obj[0]) {
-		obj ++;
+	while (' ' == objt[0] || '\t' == objt[0]) {
+		objt ++;
 	}
 	qr_parse_predicate(pred);
-	qr_parse_object(obj);
+	qr_parse_object(objt);
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-//
+// Parses our subject parameter given as a string containing only the subject field
+// Checks for all possible value types it could be and parses accordingly. Then 
+// creates the full URI for the field. If it is a variable it also stores that 
+// specially.
 /////////////////////////////////////////////////////////////////////////////////
 void qr_parse_subject(char *line) {
 	char full_URI[URL_MAX];
@@ -355,7 +373,10 @@ void qr_parse_subject(char *line) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-//
+// Parses our predicate parameter given as a string containing only the predicate field
+// Checks for all possible value types it could be and parses accordingly. Then 
+// creates the full URI for the field. If it is a variable it also stores that 
+// specially.
 /////////////////////////////////////////////////////////////////////////////////
 void qr_parse_predicate(char *line) {
 	char full_URI[URL_MAX];
@@ -389,7 +410,10 @@ void qr_parse_predicate(char *line) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-//
+// Parses our object parameter given as a string containing only the object field
+// Checks for all possible value types it could be and parses accordingly. Then 
+// creates the full URI for the field. If it is a variable it also stores that 
+// specially.
 /////////////////////////////////////////////////////////////////////////////////
 void qr_parse_object(char *line) {
 	
@@ -641,7 +665,7 @@ void qr_build_query(char **finalResult) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-//
+// Prints the output variables desired by the given query.
 /////////////////////////////////////////////////////////////////////////////////
 void qr_print_output() {
 
